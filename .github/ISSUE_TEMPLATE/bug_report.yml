@@ -1,0 +1,49 @@
+name: Bug report
+description: Report a reproducible problem in the MCP server
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Do not include API tokens, accounting data, or other secrets.
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the expected and actual behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction
+      description: Provide the smallest safe set of steps that reproduces the issue.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: eboekhouden-mcp 0.2.0
+    validations:
+      required: true
+  - type: dropdown
+    id: client
+    attributes:
+      label: MCP client
+      options:
+        - Claude Desktop or Claude Code
+        - ChatGPT, Codex CLI, or Codex IDE extension
+        - Cursor
+        - VS Code with GitHub Copilot
+        - Windsurf
+        - Gemini CLI
+        - Another MCP client
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs
+      description: Remove tokens, identifiers, names, addresses, and financial data.
+      render: shell

@@ -40,9 +40,13 @@ Issues = "https://github.com/matisup10/e-Boekhouden-MCP/issues"
 
 [project.optional-dependencies]
 dev = [
+    "bandit>=1.8.0",
     "build>=1.2.0",
+    "mypy>=1.14.0",
+    "pre-commit>=4.0.0",
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
+    "pytest-cov>=6.0.0",
     "ruff>=0.12.0",
     "twine>=5.0.0",
 ]
@@ -55,6 +59,28 @@ packages = ["eboekhouden_mcp", "eboekhouden"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["eboekhouden", "eboekhouden_mcp"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+skip_covered = true
+
+[tool.mypy]
+python_version = "3.10"
+check_untyped_defs = true
+ignore_missing_imports = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = ["eboekhouden_mcp.server", "eboekhouden_mcp.tools.*"]
+disable_error_code = ["call-arg"]
 
 [tool.ruff]
 target-version = "py310"

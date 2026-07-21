@@ -11,7 +11,7 @@ from typing import AsyncIterator
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import CallToolResult, TextContent, Tool, ToolAnnotations
-from pydantic import ValidationError
+from pydantic import SecretStr, ValidationError
 
 from eboekhouden import EBoekhoudenClient, EBoekhoudenConfig
 from eboekhouden.exceptions import EBoekhoudenError
@@ -63,7 +63,7 @@ class EBoekhoudenMCPServer:
 
         # Create SDK config
         self._sdk_config = EBoekhoudenConfig(
-            secret_token=config.secret_token.get_secret_value(),
+            secret_token=SecretStr(config.secret_token.get_secret_value()),
             api_url=config.api_url,
             source=config.source,
         )

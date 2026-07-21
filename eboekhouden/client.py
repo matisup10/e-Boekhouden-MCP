@@ -4,6 +4,7 @@ import logging
 import re
 import threading
 import time
+from typing import Any
 
 import httpx
 from typing_extensions import Self
@@ -63,16 +64,16 @@ class EBoekhoudenClient:
             source: Source identifier (default: PythonSDK)
             session_refresh_buffer: Seconds before expiry to refresh session (default: 60)
         """
-        self._config = EBoekhoudenConfig(
-            **({"secret_token": secret_token} if secret_token else {}),
-            **({"api_url": api_url} if api_url else {}),
-            **({"source": _normalize_session_source(source)} if source else {}),
-            **(
-                {"session_refresh_buffer": session_refresh_buffer}
-                if session_refresh_buffer
-                else {}
-            ),
-        )
+        config_values: dict[str, Any] = {}
+        if secret_token:
+            config_values["secret_token"] = secret_token
+        if api_url:
+            config_values["api_url"] = api_url
+        if source:
+            config_values["source"] = _normalize_session_source(source)
+        if session_refresh_buffer:
+            config_values["session_refresh_buffer"] = session_refresh_buffer
+        self._config = EBoekhoudenConfig(**config_values)
         self._config.source = _normalize_session_source(self._config.source)
 
         self._session_lock = threading.RLock()

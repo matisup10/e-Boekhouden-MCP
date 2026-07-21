@@ -44,12 +44,15 @@ class BaseService:
             self._client._ensure_session()
 
             def send() -> httpx.Response:
+                session_token = self._client._session_token
+                if session_token is None:
+                    raise AuthenticationError("No active API session")
                 return self._client._ensure_http_client().request(
                     method,
                     path,
                     json=json,
                     params=params,
-                    headers={"Authorization": self._client._session_token},
+                    headers={"Authorization": session_token},
                 )
 
             response = send()

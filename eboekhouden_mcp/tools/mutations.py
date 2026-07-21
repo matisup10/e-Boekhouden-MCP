@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import Field, field_validator
 
+from eboekhouden.models.enums import MutationType
 from eboekhouden.models.mutation import CreateMutation, CreateMutationRow
 from eboekhouden_mcp.tools.base import BaseTool, PaginatedInput, ToolSchema
 
@@ -250,7 +251,7 @@ class CreateMutationTool(BaseTool):
                 )
 
         mutation_data = CreateMutation(
-            type=str(arguments["type"]),
+            type=MutationType(str(arguments["type"])),
             date=arguments["date"],
             ledger_id=arguments["ledger_id"],
             rows=rows,
