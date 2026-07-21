@@ -15,7 +15,9 @@ if TYPE_CHECKING:
 class ListUnitsInput(ToolSchema):
     """Input schema for list_units tool."""
 
-    limit: int | None = Field(default=None, description="Number of items to retrieve (max 2000)")
+    limit: int | None = Field(
+        default=None, description="Number of items to retrieve (max 2000)"
+    )
     offset: int | None = Field(default=None, description="Number of items to skip")
 
 

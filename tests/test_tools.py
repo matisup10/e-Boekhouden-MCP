@@ -1,9 +1,6 @@
 """Tests for MCP tools."""
 
-import pytest
-from unittest.mock import MagicMock, AsyncMock
-
-from eboekhouden_mcp.tools import ToolRegistry, register_all_tools
+from eboekhouden_mcp.tools import WRITE_TOOL_NAMES, ToolRegistry, register_all_tools
 from eboekhouden_mcp.tools.base import BaseTool
 
 
@@ -97,6 +94,19 @@ class TestRegisterAllTools:
         assert "list_invoice_templates" in registry
         assert "list_units" in registry
         assert "send_file_to_digital_archive" in registry
+
+    def test_all_side_effect_named_tools_are_guarded(self):
+        """Conventional write verbs must never bypass the server write policy."""
+        registry = ToolRegistry()
+        register_all_tools(registry)
+
+        side_effect_tools = {
+            tool.name
+            for tool in registry.list_tools()
+            if tool.name.startswith(("create_", "update_", "delete_", "send_"))
+        }
+
+        assert side_effect_tools == WRITE_TOOL_NAMES
 
 
 class TestToolSchemas:

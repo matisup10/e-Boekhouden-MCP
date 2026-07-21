@@ -17,11 +17,18 @@ if TYPE_CHECKING:
 class ListMutationsInput(ToolSchema):
     """Input schema for list_mutations tool."""
 
-    limit: int | None = Field(default=None, description="Number of items to retrieve (max 2000)")
+    limit: int | None = Field(
+        default=None, description="Number of items to retrieve (max 2000)"
+    )
     offset: int | None = Field(default=None, description="Number of items to skip")
-    type: int | None = Field(default=None, description="Mutation type (1-7): 1=Invoice received, 2=Invoice sent, 3=Payment received, 4=Payment made, 5=Bank/cash, 6=Deposit, 7=General journal")
+    type: int | None = Field(
+        default=None,
+        description="Mutation type (1-7): 1=Invoice received, 2=Invoice sent, 3=Payment received, 4=Payment made, 5=Bank/cash, 6=Deposit, 7=General journal",
+    )
     description: str | None = Field(default=None, description="Filter by description")
-    invoice_number: str | None = Field(default=None, description="Filter by invoice number")
+    invoice_number: str | None = Field(
+        default=None, description="Filter by invoice number"
+    )
     date: str | None = Field(default=None, description="Filter by date (YYYY-MM-DD)")
 
 
@@ -72,15 +79,28 @@ class GetMutationTool(BaseTool):
 class CreateMutationInput(ToolSchema):
     """Input schema for create_mutation tool."""
 
-    type: Literal["1", "2", "3", "4", "5", "6", "7"] = Field(description="Mutation type as string: 1=Invoice received, 2=Invoice sent, 3=Payment received, 4=Payment made, 5=Money received, 6=Money sent, 7=General journal")
+    type: Literal["1", "2", "3", "4", "5", "6", "7"] = Field(
+        description="Mutation type as string: 1=Invoice received, 2=Invoice sent, 3=Payment received, 4=Payment made, 5=Money received, 6=Money sent, 7=General journal"
+    )
     date: str = Field(description="Mutation date (YYYY-MM-DD)")
     ledger_id: int = Field(description="Main ledger account ID for the mutation")
-    rows: list[dict] | dict | str | None = Field(default=None, description="Mutation rows as an array of objects. Also accepts a JSON string containing one row object or an array of row objects.")
-    description: str | None = Field(default=None, description="Description (max 50 chars)")
-    invoice_number: str | None = Field(default=None, description="Invoice number for reference (max 50 chars)")
+    rows: list[dict] | dict | str | None = Field(
+        default=None,
+        description="Mutation rows as an array of objects. Also accepts a JSON string containing one row object or an array of row objects.",
+    )
+    description: str | None = Field(
+        default=None, description="Description (max 50 chars)"
+    )
+    invoice_number: str | None = Field(
+        default=None, description="Invoice number for reference (max 50 chars)"
+    )
     relation_id: int | str | None = Field(default=None, description="Relation ID")
-    term_of_payment: int | None = Field(default=None, description="Payment term in days")
-    in_ex_vat: str | None = Field(default=None, description="'IN' for VAT inclusive, 'EX' for VAT exclusive")
+    term_of_payment: int | None = Field(
+        default=None, description="Payment term in days"
+    )
+    in_ex_vat: str | None = Field(
+        default=None, description="'IN' for VAT inclusive, 'EX' for VAT exclusive"
+    )
 
 
 class CreateMutationTool(BaseTool):
@@ -114,14 +134,35 @@ class CreateMutationTool(BaseTool):
                     "items": {
                         "type": "object",
                         "properties": {
-                            "ledger_id": {"type": "integer", "description": "Ledger account ID for this row"},
-                            "vat_code": {"type": "string", "description": "VAT code, e.g. BU_EU_INK or GEEN"},
+                            "ledger_id": {
+                                "type": "integer",
+                                "description": "Ledger account ID for this row",
+                            },
+                            "vat_code": {
+                                "type": "string",
+                                "description": "VAT code, e.g. BU_EU_INK or GEEN",
+                            },
                             "amount": {"type": "number", "description": "Row amount"},
-                            "vat_amount": {"type": "number", "description": "VAT amount for divergent VAT codes"},
-                            "cost_center_id": {"type": "integer", "description": "Cost center ID"},
-                            "description": {"type": "string", "description": "Row description"},
-                            "invoice_number": {"type": "string", "description": "Invoice number for payment rows"},
-                            "relation_id": {"type": "integer", "description": "Relation ID for payment rows"},
+                            "vat_amount": {
+                                "type": "number",
+                                "description": "VAT amount for divergent VAT codes",
+                            },
+                            "cost_center_id": {
+                                "type": "integer",
+                                "description": "Cost center ID",
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "Row description",
+                            },
+                            "invoice_number": {
+                                "type": "string",
+                                "description": "Invoice number for payment rows",
+                            },
+                            "relation_id": {
+                                "type": "integer",
+                                "description": "Relation ID for payment rows",
+                            },
                         },
                         "required": ["vat_code", "amount"],
                         "additionalProperties": False,
@@ -162,7 +203,9 @@ class CreateMutationTool(BaseTool):
     ) -> dict[str, Any]:
         # Convert row dicts to CreateMutationRow models if provided
         rows = None
-        normalized_rows = _normalize_mutation_rows(arguments.get("rows", arguments.get("rows_json")))
+        normalized_rows = _normalize_mutation_rows(
+            arguments.get("rows", arguments.get("rows_json"))
+        )
         if normalized_rows:
             rows = []
             for row_data in normalized_rows:
@@ -202,7 +245,9 @@ def _normalize_mutation_rows(rows: Any) -> list[dict[str, Any]] | None:
         try:
             rows = json.loads(rows)
         except json.JSONDecodeError as exc:
-            raise ValueError("rows must be an array/object or a JSON string containing row data") from exc
+            raise ValueError(
+                "rows must be an array/object or a JSON string containing row data"
+            ) from exc
 
     if isinstance(rows, dict):
         rows = [rows]
@@ -221,10 +266,16 @@ def _normalize_mutation_rows(rows: Any) -> list[dict[str, Any]] | None:
 class ListOutstandingInvoicesInput(ToolSchema):
     """Input schema for list_outstanding_invoices tool."""
 
-    cred_deb: str = Field(description="'C' for creditors (bills to pay) or 'D' for debtors (invoices to receive)")
-    limit: int | None = Field(default=None, description="Number of items to retrieve (max 2000)")
+    cred_deb: str = Field(
+        description="'C' for creditors (bills to pay) or 'D' for debtors (invoices to receive)"
+    )
+    limit: int | None = Field(
+        default=None, description="Number of items to retrieve (max 2000)"
+    )
     offset: int | None = Field(default=None, description="Number of items to skip")
-    invoice_number: str | None = Field(default=None, description="Filter by invoice number")
+    invoice_number: str | None = Field(
+        default=None, description="Filter by invoice number"
+    )
 
 
 class ListOutstandingInvoicesTool(BaseTool):

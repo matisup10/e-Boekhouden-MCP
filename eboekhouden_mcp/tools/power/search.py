@@ -45,16 +45,36 @@ def _dump(obj: Any, verbose: bool) -> dict[str, Any]:
 class SearchRelationsInput(ToolSchema):
     """Input schema for search_relations."""
 
-    name: str | None = Field(default=None, description="Match company/person name (contains)")
-    email: str | None = Field(default=None, description="Match email address (contains)")
+    name: str | None = Field(
+        default=None, description="Match company/person name (contains)"
+    )
+    email: str | None = Field(
+        default=None, description="Match email address (contains)"
+    )
     city: str | None = Field(default=None, description="Match city (contains)")
     code: str | None = Field(default=None, description="Match relation code (contains)")
-    contact: str | None = Field(default=None, description="Match contact name (contains)")
-    type: str | None = Field(default=None, description="Relation type: 'B' business or 'P' private")
-    hydrate: bool = Field(default=True, description="Fetch full detail per match (name, address, IBAN, etc.). The list endpoint only returns id/type/code.")
-    max_details: int = Field(default=_MAX_DETAILS_DEFAULT, description="Max records to hydrate/return (cap guards token cost)")
-    scan_limit: int = Field(default=_SCAN_LIMIT_DEFAULT, description="Max candidates pulled from the API before hydration (max 2000)")
-    verbose: bool = Field(default=False, description="Return raw JSON with all null fields instead of compact output")
+    contact: str | None = Field(
+        default=None, description="Match contact name (contains)"
+    )
+    type: str | None = Field(
+        default=None, description="Relation type: 'B' business or 'P' private"
+    )
+    hydrate: bool = Field(
+        default=True,
+        description="Fetch full detail per match (name, address, IBAN, etc.). The list endpoint only returns id/type/code.",
+    )
+    max_details: int = Field(
+        default=_MAX_DETAILS_DEFAULT,
+        description="Max records to hydrate/return (cap guards token cost)",
+    )
+    scan_limit: int = Field(
+        default=_SCAN_LIMIT_DEFAULT,
+        description="Max candidates pulled from the API before hydration (max 2000)",
+    )
+    verbose: bool = Field(
+        default=False,
+        description="Return raw JSON with all null fields instead of compact output",
+    )
 
 
 class SearchRelationsTool(BaseTool):
@@ -68,7 +88,9 @@ class SearchRelationsTool(BaseTool):
     )
     input_schema = SearchRelationsInput
 
-    async def execute(self, client: "EBoekhoudenClient", arguments: dict[str, Any]) -> dict[str, Any]:
+    async def execute(
+        self, client: "EBoekhoudenClient", arguments: dict[str, Any]
+    ) -> dict[str, Any]:
         verbose = bool(arguments.get("verbose", False))
         max_details = int(arguments.get("max_details", _MAX_DETAILS_DEFAULT))
         scan_limit = min(int(arguments.get("scan_limit", _SCAN_LIMIT_DEFAULT)), 2000)
@@ -87,7 +109,9 @@ class SearchRelationsTool(BaseTool):
         if not arguments.get("hydrate", True):
             items = [_dump(c, verbose) for c in candidates[:max_details]]
             truncated = total > max_details
-            return capped_result(items, truncated, total, hint="Raise max_details or narrow filters.")
+            return capped_result(
+                items, truncated, total, hint="Raise max_details or narrow filters."
+            )
 
         selected = candidates[:max_details]
         items = [_dump(client.relations.get(c.id), verbose) for c in selected]
@@ -109,21 +133,50 @@ class SearchMutationsInput(ToolSchema):
     """Input schema for search_mutations."""
 
     type: int | None = Field(default=None, description="Mutation type 1-7 (exact)")
-    date_from: str | None = Field(default=None, description="On/after date (YYYY-MM-DD)")
+    date_from: str | None = Field(
+        default=None, description="On/after date (YYYY-MM-DD)"
+    )
     date_to: str | None = Field(default=None, description="On/before date (YYYY-MM-DD)")
     id_from: int | None = Field(default=None, description="Minimum mutation id")
     id_to: int | None = Field(default=None, description="Maximum mutation id")
-    description: str | None = Field(default=None, description="Match description (contains)")
-    invoice_number: str | None = Field(default=None, description="Match invoice number (contains)")
-    relation_id: int | None = Field(default=None, description="Only mutations involving this relation (needs detail; forces hydrate)")
-    ledger_id: int | None = Field(default=None, description="Only mutations touching this ledger on the header or any line")
-    cost_center_id: int | None = Field(default=None, description="Only mutations with a line on this cost center (needs detail; forces hydrate)")
-    amount_min: float | None = Field(default=None, description="Minimum mutation amount")
-    amount_max: float | None = Field(default=None, description="Maximum mutation amount")
-    hydrate: bool = Field(default=True, description="Include line rows, VAT breakdown, relation and description (list omits these)")
-    max_details: int = Field(default=_MAX_DETAILS_DEFAULT, description="Max detailed mutations to return")
-    scan_limit: int = Field(default=_SCAN_LIMIT_DEFAULT, description="Max candidates pulled from the API before filtering (max 2000)")
-    verbose: bool = Field(default=False, description="Return raw JSON instead of compact output")
+    description: str | None = Field(
+        default=None, description="Match description (contains)"
+    )
+    invoice_number: str | None = Field(
+        default=None, description="Match invoice number (contains)"
+    )
+    relation_id: int | None = Field(
+        default=None,
+        description="Only mutations involving this relation (needs detail; forces hydrate)",
+    )
+    ledger_id: int | None = Field(
+        default=None,
+        description="Only mutations touching this ledger on the header or any line",
+    )
+    cost_center_id: int | None = Field(
+        default=None,
+        description="Only mutations with a line on this cost center (needs detail; forces hydrate)",
+    )
+    amount_min: float | None = Field(
+        default=None, description="Minimum mutation amount"
+    )
+    amount_max: float | None = Field(
+        default=None, description="Maximum mutation amount"
+    )
+    hydrate: bool = Field(
+        default=True,
+        description="Include line rows, VAT breakdown, relation and description (list omits these)",
+    )
+    max_details: int = Field(
+        default=_MAX_DETAILS_DEFAULT, description="Max detailed mutations to return"
+    )
+    scan_limit: int = Field(
+        default=_SCAN_LIMIT_DEFAULT,
+        description="Max candidates pulled from the API before filtering (max 2000)",
+    )
+    verbose: bool = Field(
+        default=False, description="Return raw JSON instead of compact output"
+    )
 
 
 class SearchMutationsTool(BaseTool):
@@ -137,7 +190,9 @@ class SearchMutationsTool(BaseTool):
     )
     input_schema = SearchMutationsInput
 
-    async def execute(self, client: "EBoekhoudenClient", arguments: dict[str, Any]) -> dict[str, Any]:
+    async def execute(
+        self, client: "EBoekhoudenClient", arguments: dict[str, Any]
+    ) -> dict[str, Any]:
         verbose = bool(arguments.get("verbose", False))
         max_details = int(arguments.get("max_details", _MAX_DETAILS_DEFAULT))
         scan_limit = min(int(arguments.get("scan_limit", _SCAN_LIMIT_DEFAULT)), 2000)
@@ -151,10 +206,14 @@ class SearchMutationsTool(BaseTool):
         candidates = client.mutations.list(
             limit=scan_limit,
             type=arguments.get("type"),
-            id_filter=range_int_filter(arguments.get("id_from"), arguments.get("id_to")),
+            id_filter=range_int_filter(
+                arguments.get("id_from"), arguments.get("id_to")
+            ),
             description=_like(arguments.get("description")),
             invoice_number=_like(arguments.get("invoice_number")),
-            date_filter=range_date_filter(arguments.get("date_from"), arguments.get("date_to")),
+            date_filter=range_date_filter(
+                arguments.get("date_from"), arguments.get("date_to")
+            ),
         ).items
         scan_truncated = len(candidates) >= scan_limit
 
@@ -163,8 +222,12 @@ class SearchMutationsTool(BaseTool):
         candidates = apply_filters(
             candidates,
             {
-                "amount_min": lambda m: amount_min is None or float(m.amount) >= amount_min,
-                "amount_max": lambda m: amount_max is None or float(m.amount) <= amount_max,
+                "amount_min": lambda m: (
+                    amount_min is None or float(m.amount) >= amount_min
+                ),
+                "amount_max": lambda m: (
+                    amount_max is None or float(m.amount) <= amount_max
+                ),
             },
         )
 
@@ -177,7 +240,9 @@ class SearchMutationsTool(BaseTool):
             items = [_dump(m, verbose) for m in candidates[:max_details]]
             truncated = scan_truncated or len(candidates) > max_details
             return capped_result(
-                items, truncated, len(candidates),
+                items,
+                truncated,
+                len(candidates),
                 hint="Narrow date range or raise scan_limit/max_details.",
             )
 
@@ -195,13 +260,20 @@ class SearchMutationsTool(BaseTool):
 
         truncated = scan_truncated or output_truncated
         return capped_result(
-            out, truncated, len(out),
+            out,
+            truncated,
+            len(out),
             hint="Reached max_details before scanning all candidates; narrow filters or raise max_details/scan_limit.",
             extra={"scanned": scanned},
         )
 
 
-def _detail_matches(detail: Any, relation_id: int | None, ledger_id: int | None, cost_center_id: int | None) -> bool:
+def _detail_matches(
+    detail: Any,
+    relation_id: int | None,
+    ledger_id: int | None,
+    cost_center_id: int | None,
+) -> bool:
     if relation_id is not None:
         header = detail.relation_id == relation_id
         rows = any(row.relation_id == relation_id for row in detail.rows)
@@ -226,16 +298,36 @@ def _detail_matches(detail: Any, relation_id: int | None, ledger_id: int | None,
 class SearchInvoicesInput(ToolSchema):
     """Input schema for search_invoices."""
 
-    invoice_number: str | None = Field(default=None, description="Match invoice number (contains)")
-    relation_id: int | None = Field(default=None, description="Filter by relation id (exact)")
-    date_from: str | None = Field(default=None, description="On/after date (YYYY-MM-DD)")
+    invoice_number: str | None = Field(
+        default=None, description="Match invoice number (contains)"
+    )
+    relation_id: int | None = Field(
+        default=None, description="Filter by relation id (exact)"
+    )
+    date_from: str | None = Field(
+        default=None, description="On/after date (YYYY-MM-DD)"
+    )
     date_to: str | None = Field(default=None, description="On/before date (YYYY-MM-DD)")
-    amount_min: float | None = Field(default=None, description="Minimum invoice total (incl. VAT)")
-    amount_max: float | None = Field(default=None, description="Maximum invoice total (incl. VAT)")
-    hydrate: bool = Field(default=False, description="Fetch line items per invoice (the list already carries header totals, so this defaults off)")
-    max_details: int = Field(default=_MAX_DETAILS_DEFAULT, description="Max invoices to return")
-    scan_limit: int = Field(default=_SCAN_LIMIT_DEFAULT, description="Max candidates pulled from the API before filtering (max 2000)")
-    verbose: bool = Field(default=False, description="Return raw JSON instead of compact output")
+    amount_min: float | None = Field(
+        default=None, description="Minimum invoice total (incl. VAT)"
+    )
+    amount_max: float | None = Field(
+        default=None, description="Maximum invoice total (incl. VAT)"
+    )
+    hydrate: bool = Field(
+        default=False,
+        description="Fetch line items per invoice (the list already carries header totals, so this defaults off)",
+    )
+    max_details: int = Field(
+        default=_MAX_DETAILS_DEFAULT, description="Max invoices to return"
+    )
+    scan_limit: int = Field(
+        default=_SCAN_LIMIT_DEFAULT,
+        description="Max candidates pulled from the API before filtering (max 2000)",
+    )
+    verbose: bool = Field(
+        default=False, description="Return raw JSON instead of compact output"
+    )
 
 
 class SearchInvoicesTool(BaseTool):
@@ -248,7 +340,9 @@ class SearchInvoicesTool(BaseTool):
     )
     input_schema = SearchInvoicesInput
 
-    async def execute(self, client: "EBoekhoudenClient", arguments: dict[str, Any]) -> dict[str, Any]:
+    async def execute(
+        self, client: "EBoekhoudenClient", arguments: dict[str, Any]
+    ) -> dict[str, Any]:
         verbose = bool(arguments.get("verbose", False))
         max_details = int(arguments.get("max_details", _MAX_DETAILS_DEFAULT))
         scan_limit = min(int(arguments.get("scan_limit", _SCAN_LIMIT_DEFAULT)), 2000)
@@ -259,15 +353,21 @@ class SearchInvoicesTool(BaseTool):
             limit=scan_limit,
             invoice_number=_like(arguments.get("invoice_number")),
             relation_id=arguments.get("relation_id"),
-            date_filter=range_date_filter(arguments.get("date_from"), arguments.get("date_to")),
+            date_filter=range_date_filter(
+                arguments.get("date_from"), arguments.get("date_to")
+            ),
         ).items
         scan_truncated = len(candidates) >= scan_limit
 
         candidates = apply_filters(
             candidates,
             {
-                "amount_min": lambda inv: amount_min is None or float(inv.total_amount) >= amount_min,
-                "amount_max": lambda inv: amount_max is None or float(inv.total_amount) <= amount_max,
+                "amount_min": lambda inv: (
+                    amount_min is None or float(inv.total_amount) >= amount_min
+                ),
+                "amount_max": lambda inv: (
+                    amount_max is None or float(inv.total_amount) <= amount_max
+                ),
             },
         )
         total = len(candidates)
@@ -279,4 +379,9 @@ class SearchInvoicesTool(BaseTool):
             items = [_dump(inv, verbose) for inv in selected]
 
         truncated = scan_truncated or total > max_details
-        return capped_result(items, truncated, total, hint="Narrow filters or raise max_details/scan_limit.")
+        return capped_result(
+            items,
+            truncated,
+            total,
+            hint="Narrow filters or raise max_details/scan_limit.",
+        )

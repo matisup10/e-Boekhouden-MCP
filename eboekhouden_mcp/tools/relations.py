@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from eboekhouden.models.relation import CreateRelation, PatchRelation
 from eboekhouden_mcp.tools.base import BaseTool, ToolSchema
@@ -16,10 +16,14 @@ if TYPE_CHECKING:
 class ListRelationsInput(ToolSchema):
     """Input schema for list_relations tool."""
 
-    limit: int | None = Field(default=None, description="Number of items to retrieve (max 2000)")
+    limit: int | None = Field(
+        default=None, description="Number of items to retrieve (max 2000)"
+    )
     offset: int | None = Field(default=None, description="Number of items to skip")
     code: str | None = Field(default=None, description="Filter by relation code")
-    type: str | None = Field(default=None, description="Filter by type ('B' for business or 'P' for private)")
+    type: str | None = Field(
+        default=None, description="Filter by type ('B' for business or 'P' for private)"
+    )
     email: str | None = Field(default=None, description="Filter by email address")
     name: str | None = Field(default=None, description="Filter by company name")
     contact: str | None = Field(default=None, description="Filter by contact name")
@@ -76,22 +80,43 @@ class CreateRelationInput(ToolSchema):
     """Input schema for create_relation tool."""
 
     name: str = Field(description="Company or contact name (required, max 100 chars)")
-    type: str | None = Field(default=None, description="Type: 'B' for business or 'P' for private")
+    type: str | None = Field(
+        default=None, description="Type: 'B' for business or 'P' for private"
+    )
     code: str | None = Field(default=None, description="Relation code (max 15 chars)")
-    salutation: str | None = Field(default=None, description="Salutation (max 50 chars)")
-    contact: str | None = Field(default=None, description="Contact person (max 50 chars)")
-    gender: str | None = Field(default=None, description="Gender: 'm' for male, 'v' for female, 'a' for department")
-    address: str | None = Field(default=None, description="Street address (max 150 chars)")
-    postal_code: str | None = Field(default=None, description="Postal code (max 50 chars)")
+    salutation: str | None = Field(
+        default=None, description="Salutation (max 50 chars)"
+    )
+    contact: str | None = Field(
+        default=None, description="Contact person (max 50 chars)"
+    )
+    gender: str | None = Field(
+        default=None,
+        description="Gender: 'm' for male, 'v' for female, 'a' for department",
+    )
+    address: str | None = Field(
+        default=None, description="Street address (max 150 chars)"
+    )
+    postal_code: str | None = Field(
+        default=None, description="Postal code (max 50 chars)"
+    )
     city: str | None = Field(default=None, description="City (max 50 chars)")
     country: str | None = Field(default=None, description="Country (max 50 chars)")
-    phone_number: str | None = Field(default=None, description="Phone number (max 50 chars)")
-    email_address: str | None = Field(default=None, description="Email address (max 150 chars)")
+    phone_number: str | None = Field(
+        default=None, description="Phone number (max 50 chars)"
+    )
+    email_address: str | None = Field(
+        default=None, description="Email address (max 150 chars)"
+    )
     website: str | None = Field(default=None, description="Website URL (max 50 chars)")
-    vat_number: str | None = Field(default=None, description="VAT number (max 50 chars)")
+    vat_number: str | None = Field(
+        default=None, description="VAT number (max 50 chars)"
+    )
     iban: str | None = Field(default=None, description="IBAN (max 50 chars)")
     note: str | None = Field(default=None, description="Notes (max 40000 chars)")
-    term_of_payment: int | None = Field(default=None, description="Default payment term in days")
+    term_of_payment: int | None = Field(
+        default=None, description="Default payment term in days"
+    )
 
 
 class CreateRelationTool(BaseTool):
@@ -132,7 +157,9 @@ class UpdateRelationInput(ToolSchema):
 
     id: int = Field(description="Relation ID to update")
     name: str = Field(description="Company or contact name (required)")
-    type: str | None = Field(default=None, description="Type: 'B' for business or 'P' for private")
+    type: str | None = Field(
+        default=None, description="Type: 'B' for business or 'P' for private"
+    )
     code: str | None = Field(default=None, description="Relation code")
     contact: str | None = Field(default=None, description="Contact person")
     address: str | None = Field(default=None, description="Street address")
@@ -150,7 +177,9 @@ class UpdateRelationTool(BaseTool):
     """Update an existing relation."""
 
     name = "update_relation"
-    description = "Update an existing relation's details like name, address, contact info, etc."
+    description = (
+        "Update an existing relation's details like name, address, contact info, etc."
+    )
     input_schema = UpdateRelationInput
 
     async def execute(

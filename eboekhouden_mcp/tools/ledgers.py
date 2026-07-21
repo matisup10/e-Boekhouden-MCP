@@ -16,10 +16,14 @@ if TYPE_CHECKING:
 class ListLedgersInput(ToolSchema):
     """Input schema for list_ledgers tool."""
 
-    limit: int | None = Field(default=None, description="Number of items to retrieve (max 2000)")
+    limit: int | None = Field(
+        default=None, description="Number of items to retrieve (max 2000)"
+    )
     offset: int | None = Field(default=None, description="Number of items to skip")
     code: str | None = Field(default=None, description="Filter by ledger code")
-    category: str | None = Field(default=None, description="Filter by category (BAL, VW, etc.)")
+    category: str | None = Field(
+        default=None, description="Filter by category (BAL, VW, etc.)"
+    )
 
 
 class ListLedgersTool(BaseTool):
@@ -122,9 +126,15 @@ class GetLedgerBalanceInput(ToolSchema):
     """Input schema for get_ledger_balance tool."""
 
     id: int = Field(description="Ledger ID")
-    cost_center_id: int | None = Field(default=None, description="Filter by cost center ID")
-    from_date: str | None = Field(default=None, description="Start date for period balance (YYYY-MM-DD)")
-    to_date: str | None = Field(default=None, description="End date for balance (YYYY-MM-DD)")
+    cost_center_id: int | None = Field(
+        default=None, description="Filter by cost center ID"
+    )
+    from_date: str | None = Field(
+        default=None, description="Start date for period balance (YYYY-MM-DD)"
+    )
+    to_date: str | None = Field(
+        default=None, description="End date for balance (YYYY-MM-DD)"
+    )
 
 
 class GetLedgerBalanceTool(BaseTool):

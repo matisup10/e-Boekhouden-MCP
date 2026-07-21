@@ -24,7 +24,9 @@ class _FakeService:
 
     def list(self, **kwargs):
         self.list_kwargs = kwargs
-        return SimpleNamespace(items=list(self._list_items), count=len(self._list_items))
+        return SimpleNamespace(
+            items=list(self._list_items), count=len(self._list_items)
+        )
 
     def get(self, id):
         self.got_ids.append(id)
@@ -45,7 +47,10 @@ class _FakeClient:
 
 async def test_search_relations_hydrates_full_detail_by_default():
     relations = _FakeService(
-        [RelationListItem(id=1, type="B", code="C1"), RelationListItem(id=2, type="B", code="C2")],
+        [
+            RelationListItem(id=1, type="B", code="C1"),
+            RelationListItem(id=2, type="B", code="C2"),
+        ],
         {
             1: Relation(id=1, name="Acme BV", city="Amsterdam"),
             2: Relation(id=2, name="Acme Holding", city="Utrecht"),
@@ -70,7 +75,9 @@ async def test_search_relations_without_hydrate_returns_list_fields_only():
     )
     client = _FakeClient(relations=relations)
 
-    result = await SearchRelationsTool().execute(client, {"name": "acme", "hydrate": False})
+    result = await SearchRelationsTool().execute(
+        client, {"name": "acme", "hydrate": False}
+    )
 
     assert relations.got_ids == []  # no per-id fetches
     assert "name" not in result["items"][0]
@@ -82,16 +89,24 @@ async def test_search_relations_without_hydrate_returns_list_fields_only():
 
 
 def _mut_item(id, amount, ledger_id=8000):
-    return MutationListItem(id=id, type="2", date="2026-01-05", ledgerId=ledger_id, amount=amount)
+    return MutationListItem(
+        id=id, type="2", date="2026-01-05", ledgerId=ledger_id, amount=amount
+    )
 
 
 async def test_search_mutations_filters_by_relation_via_hydration():
     mutations = _FakeService(
         [_mut_item(10, 100), _mut_item(11, 200), _mut_item(12, 300)],
         {
-            10: Mutation(id=10, type="2", date="2026-01-05", ledgerId=8000, relationId=42),
-            11: Mutation(id=11, type="2", date="2026-01-06", ledgerId=8000, relationId=99),
-            12: Mutation(id=12, type="2", date="2026-01-07", ledgerId=8000, relationId=42),
+            10: Mutation(
+                id=10, type="2", date="2026-01-05", ledgerId=8000, relationId=42
+            ),
+            11: Mutation(
+                id=11, type="2", date="2026-01-06", ledgerId=8000, relationId=99
+            ),
+            12: Mutation(
+                id=12, type="2", date="2026-01-07", ledgerId=8000, relationId=42
+            ),
         },
     )
     client = _FakeClient(mutations=mutations)
@@ -103,7 +118,9 @@ async def test_search_mutations_filters_by_relation_via_hydration():
 
 
 async def test_search_mutations_amount_prefilter_without_hydration():
-    mutations = _FakeService([_mut_item(10, 100), _mut_item(11, 200), _mut_item(12, 300)])
+    mutations = _FakeService(
+        [_mut_item(10, 100), _mut_item(11, 200), _mut_item(12, 300)]
+    )
     client = _FakeClient(mutations=mutations)
 
     result = await SearchMutationsTool().execute(
@@ -117,11 +134,16 @@ async def test_search_mutations_amount_prefilter_without_hydration():
 
 async def test_search_mutations_respects_max_details_cap():
     items = [_mut_item(i, 100) for i in range(20, 26)]
-    details = {i: Mutation(id=i, type="2", date="2026-01-05", ledgerId=8000, relationId=7) for i in range(20, 26)}
+    details = {
+        i: Mutation(id=i, type="2", date="2026-01-05", ledgerId=8000, relationId=7)
+        for i in range(20, 26)
+    }
     mutations = _FakeService(items, details)
     client = _FakeClient(mutations=mutations)
 
-    result = await SearchMutationsTool().execute(client, {"relation_id": 7, "max_details": 2})
+    result = await SearchMutationsTool().execute(
+        client, {"relation_id": 7, "max_details": 2}
+    )
 
     assert result["count"] == 2
     assert result["truncated"] is True
@@ -191,7 +213,11 @@ async def test_search_invoices_hydrate_adds_line_items():
                 totalExcl=100,
                 totalAmount=100,
                 vatAmount=0,
-                items=[InvoiceItem(description="Widget", vatCode="HOOG_VERK_21", ledgerId=8000)],
+                items=[
+                    InvoiceItem(
+                        description="Widget", vatCode="HOOG_VERK_21", ledgerId=8000
+                    )
+                ],
             )
         },
     )

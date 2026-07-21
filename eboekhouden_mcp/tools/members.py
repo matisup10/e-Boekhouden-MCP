@@ -16,9 +16,13 @@ if TYPE_CHECKING:
 class ListMembersInput(ToolSchema):
     """Input schema for list_members tool."""
 
-    limit: int | None = Field(default=None, description="Number of items to retrieve (max 2000)")
+    limit: int | None = Field(
+        default=None, description="Number of items to retrieve (max 2000)"
+    )
     offset: int | None = Field(default=None, description="Number of items to skip")
-    member_number: str | None = Field(default=None, description="Filter by member number")
+    member_number: str | None = Field(
+        default=None, description="Filter by member number"
+    )
     name: str | None = Field(default=None, description="Filter by name")
     email: str | None = Field(default=None, description="Filter by email")
     city: str | None = Field(default=None, description="Filter by city")
@@ -72,15 +76,30 @@ class CreateMemberInput(ToolSchema):
     """Input schema for create_member tool."""
 
     name: str = Field(description="Member name (required, max 100 chars)")
-    member_number: str | None = Field(default=None, description="Member number (max 15 chars)")
-    salutation: str | None = Field(default=None, description="Salutation (max 50 chars)")
-    gender: str | None = Field(default=None, description="Gender: 'm' for male, 'v' for female, 'a' for department")
-    address: str | None = Field(default=None, description="Street address (max 150 chars)")
-    postal_code: str | None = Field(default=None, description="Postal code (max 50 chars)")
+    member_number: str | None = Field(
+        default=None, description="Member number (max 15 chars)"
+    )
+    salutation: str | None = Field(
+        default=None, description="Salutation (max 50 chars)"
+    )
+    gender: str | None = Field(
+        default=None,
+        description="Gender: 'm' for male, 'v' for female, 'a' for department",
+    )
+    address: str | None = Field(
+        default=None, description="Street address (max 150 chars)"
+    )
+    postal_code: str | None = Field(
+        default=None, description="Postal code (max 50 chars)"
+    )
     city: str | None = Field(default=None, description="City (max 50 chars)")
     country: str | None = Field(default=None, description="Country (max 50 chars)")
-    phone_number: str | None = Field(default=None, description="Phone number (max 50 chars)")
-    email_address: str | None = Field(default=None, description="Email address (max 150 chars)")
+    phone_number: str | None = Field(
+        default=None, description="Phone number (max 50 chars)"
+    )
+    email_address: str | None = Field(
+        default=None, description="Email address (max 150 chars)"
+    )
     note: str | None = Field(default=None, description="Notes (max 40000 chars)")
     iban: str | None = Field(default=None, description="IBAN (max 50 chars)")
 
@@ -89,7 +108,9 @@ class CreateMemberTool(BaseTool):
     """Create a new member."""
 
     name = "create_member"
-    description = "Create a new member (for clubs/associations) with name and contact info"
+    description = (
+        "Create a new member (for clubs/associations) with name and contact info"
+    )
     input_schema = CreateMemberInput
 
     async def execute(
