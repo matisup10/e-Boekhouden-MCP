@@ -10,6 +10,7 @@ from eboekhouden.exceptions import (
     APIError,
     AuthenticationError,
     NotFoundError,
+    RateLimitError,
     SecurityError,
     ValidationError,
 )
@@ -39,16 +40,25 @@ class BaseService:
         params: dict[str, Any] | None = None,
     ) -> httpx.Response:
         """Make an authenticated HTTP request."""
-        self._client._ensure_session()
-        response = self._client._ensure_http_client().request(
-            method,
-            path,
-            json=json,
-            params=params,
-            headers={"Authorization": self._client._session_token},
-        )
-        self._handle_errors(response)
-        return response
+        with self._client._session_lock:
+            self._client._ensure_session()
+
+            def send() -> httpx.Response:
+                return self._client._ensure_http_client().request(
+                    method,
+                    path,
+                    json=json,
+                    params=params,
+                    headers={"Authorization": self._client._session_token},
+                )
+
+            response = send()
+            if response.status_code == 401:
+                self._client._discard_session(delete_remote=False)
+                self._client._create_session()
+                response = send()
+            self._handle_errors(response)
+            return response
 
     def _handle_errors(self, response: httpx.Response) -> None:
         """Handle error responses from the API."""
@@ -75,6 +85,15 @@ class BaseService:
         elif response.status_code == 400:
             errors = data.get("errors", {})
             raise ValidationError(message, code, errors)
+        elif response.status_code == 429:
+            retry_after_header = response.headers.get("Retry-After")
+            retry_after = None
+            if retry_after_header:
+                try:
+                    retry_after = int(retry_after_header)
+                except ValueError:
+                    pass
+            raise RateLimitError(message, retry_after)
         else:
             raise APIError(message, response.status_code, code, error_type, data)
 

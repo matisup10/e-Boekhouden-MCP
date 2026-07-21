@@ -1,5 +1,7 @@
 """Administration service for the e-Boekhouden SDK."""
 
+from collections.abc import Generator
+
 from eboekhouden.models.administration import AdministrationList, AdministrationListItem
 from eboekhouden.services.base import BaseService
 
@@ -45,7 +47,9 @@ class AdministrationService(BaseService):
         response = self._get("/v1/administration/linked", params)
         return AdministrationList.model_validate(response.json())
 
-    def iter_all(self, limit: int = 100) -> "AdministrationService._Iter":
+    def iter_all(
+        self, limit: int = 100
+    ) -> Generator[AdministrationListItem, None, None]:
         """Iterate through all administrations.
 
         Args:

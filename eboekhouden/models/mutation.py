@@ -61,8 +61,8 @@ class Mutation(EBoekhoudenModel):
     in_ex_vat: InExVat | None = Field(default=None, alias="inExVat")
     invoice_number: str | None = Field(default=None, alias="invoiceNumber")
     entry_number: str | None = Field(default=None, alias="entryNumber")
-    rows: list[MutationRow] = []
-    vat: list[VatAmount] = []
+    rows: list[MutationRow] = Field(default_factory=list)
+    vat: list[VatAmount] = Field(default_factory=list)
 
     @field_validator("type", mode="before")
     @classmethod

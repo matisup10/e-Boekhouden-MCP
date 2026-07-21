@@ -1,6 +1,8 @@
 """Main client for the e-Boekhouden SDK."""
 
+import logging
 import re
+import threading
 import time
 
 import httpx
@@ -19,6 +21,8 @@ from eboekhouden.services.mutation import MutationService
 from eboekhouden.services.product import ProductService
 from eboekhouden.services.relation import RelationService
 from eboekhouden.services.unit import UnitService
+
+logger = logging.getLogger(__name__)
 
 
 def _normalize_session_source(source: str | None) -> str:
@@ -71,6 +75,7 @@ class EBoekhoudenClient:
         )
         self._config.source = _normalize_session_source(self._config.source)
 
+        self._session_lock = threading.RLock()
         self._http: httpx.Client | None = self._build_http_client()
 
         self._session_token: str | None = None
@@ -113,59 +118,72 @@ class EBoekhoudenClient:
 
     def close(self) -> None:
         """Close the session and HTTP client."""
-        if self._session_token:
-            try:
-                self._ensure_http_client().delete(
-                    "/v1/session",
-                    headers={"Authorization": self._session_token},
-                )
-            except Exception:
-                pass  # Ignore errors during cleanup
-            self._session_token = None
-            self._session_expires_at = 0
-        if self._http is not None:
-            self._http.close()
-            self._http = None
+        with self._session_lock:
+            self._discard_session(delete_remote=True)
+            if self._http is not None:
+                self._http.close()
+                self._http = None
+
+    def _discard_session(self, *, delete_remote: bool) -> None:
+        """Forget the current session, optionally revoking it first."""
+        token = self._session_token
+        self._session_token = None
+        self._session_expires_at = 0
+        if not token or not delete_remote:
+            return
+        try:
+            self._ensure_http_client().delete(
+                "/v1/session",
+                headers={"Authorization": token},
+            )
+        except Exception:
+            logger.debug("Could not revoke e-Boekhouden session", exc_info=True)
 
     def _create_session(self) -> None:
         """Create a new API session."""
-        response = self._ensure_http_client().post(
-            "/v1/session",
-            json={
-                "accessToken": self._config.secret_token.get_secret_value(),
-                "source": self._config.source,
-            },
-        )
+        with self._session_lock:
+            response = self._ensure_http_client().post(
+                "/v1/session",
+                json={
+                    "accessToken": self._config.secret_token.get_secret_value(),
+                    "source": self._config.source,
+                },
+            )
 
-        if response.status_code == 401:
-            raise AuthenticationError("Invalid access token")
-        elif response.status_code >= 400:
-            raise AuthenticationError(f"Failed to create session: {response.text}")
+            if response.status_code == 401:
+                raise AuthenticationError("Invalid access token")
+            if response.status_code >= 400:
+                raise AuthenticationError(
+                    f"Failed to create session (HTTP {response.status_code})"
+                )
 
-        data = response.json()
-        self._session_token = data["token"]
-        self._session_expires_at = time.time() + data["expiresIn"]
+            try:
+                data = response.json()
+                token = data["token"]
+                expires_in = float(data["expiresIn"])
+            except (KeyError, TypeError, ValueError) as exc:
+                raise AuthenticationError("Invalid session response") from exc
+            if not isinstance(token, str) or not token or expires_in <= 0:
+                raise AuthenticationError("Invalid session response")
+
+            self._session_token = token
+            self._session_expires_at = time.time() + expires_in
 
     def _ensure_session(self) -> None:
         """Ensure we have a valid session, refreshing if needed."""
-        buffer = self._config.session_refresh_buffer
-        if self._session_token is None or time.time() >= (
-            self._session_expires_at - buffer
-        ):
-            if self._session_token:
-                # Try to close old session
-                try:
-                    self._ensure_http_client().delete(
-                        "/v1/session",
-                        headers={"Authorization": self._session_token},
-                    )
-                except Exception:
-                    pass
-            self._create_session()
+        with self._session_lock:
+            buffer = self._config.session_refresh_buffer
+            if self._session_token is None or time.time() >= (
+                self._session_expires_at - buffer
+            ):
+                self._discard_session(delete_remote=True)
+                self._create_session()
 
     def refresh_session(self) -> None:
         """Manually refresh the session token."""
-        self._create_session()
+        with self._session_lock:
+            self._discard_session(delete_remote=True)
+            self._create_session()
 
     # Service accessors (lazy-loaded)
 

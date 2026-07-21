@@ -214,6 +214,7 @@ class CreateMutationTool(BaseTool):
                         vat_code=row_data["vat_code"],
                         amount=row_data["amount"],
                         ledger_id=row_data.get("ledger_id"),
+                        vat_amount=row_data.get("vat_amount"),
                         cost_center_id=row_data.get("cost_center_id"),
                         description=row_data.get("description"),
                         invoice_number=row_data.get("invoice_number"),

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
 from types import SimpleNamespace
 
 import pytest
@@ -48,6 +49,7 @@ async def test_create_mutation_accepts_numeric_mcp_type_input():
                 {
                     "vat_code": "GEEN",
                     "amount": 12.34,
+                    "vat_amount": 2.14,
                     "ledger_id": 8000,
                     "description": "Line",
                 }
@@ -63,6 +65,7 @@ async def test_create_mutation_accepts_numeric_mcp_type_input():
     assert result == {"id": 9876}
     assert client.mutations.created is not None
     assert client.mutations.created.type == "1"
+    assert client.mutations.created.rows[0].vat_amount == Decimal("2.14")
 
 
 def test_create_mutation_schema_advertises_plain_rows_array():

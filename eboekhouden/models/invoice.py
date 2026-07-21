@@ -66,7 +66,7 @@ class Invoice(EBoekhoudenModel):
     total_amount: Decimal = Field(alias="totalAmount")
     vat_amount: Decimal = Field(alias="vatAmount")
     url_pdf_file: str | None = Field(default=None, alias="urlPdfFile")
-    items: list[InvoiceItem] = []
+    items: list[InvoiceItem] = Field(default_factory=list)
 
 
 class CreateInvoiceItem(EBoekhoudenModel):

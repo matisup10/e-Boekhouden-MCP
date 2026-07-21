@@ -84,7 +84,8 @@ class RateLimitError(APIError):
     def __init__(
         self, message: str = "Rate limit exceeded", retry_after: int | None = None
     ):
-        super().__init__(message, status_code=429)
+        details = {"retry_after": retry_after} if retry_after is not None else None
+        super().__init__(message, status_code=429, details=details)
         self.retry_after = retry_after
 
 
