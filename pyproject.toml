@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "eboekhouden-mcp"
-version = "0.1.0"
-description = "MCP server for the e-Boekhouden Dutch accounting API"
+version = "0.2.0"
+description = "Secure, standalone MCP server for the e-Boekhouden accounting API"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -21,26 +21,40 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Office/Business :: Financial :: Accounting",
 ]
 dependencies = [
-    "eboekhouden>=0.1.0",
-    "mcp>=1.0.0",
-    "pydantic>=2.0.0",
-    "pydantic-settings>=2.0.0",
+    "httpx>=0.27.0,<1",
+    "mcp>=1.12.0,<2",
+    "pydantic>=2.7.0,<3",
+    "pydantic-settings>=2.2.0,<3",
+    "python-dotenv>=1.0.0,<2",
+    "typing-extensions>=4.9.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/matisup10/e-Boekhouden-MCP"
+Repository = "https://github.com/matisup10/e-Boekhouden-MCP"
+Issues = "https://github.com/matisup10/e-Boekhouden-MCP/issues"
 
 [project.optional-dependencies]
 dev = [
+    "build>=1.2.0",
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
+    "ruff>=0.12.0",
+    "twine>=5.0.0",
 ]
 
 [project.scripts]
 eboekhouden-mcp = "eboekhouden_mcp.server:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["eboekhouden_mcp"]
+packages = ["eboekhouden_mcp", "eboekhouden"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+
+[tool.ruff]
+target-version = "py310"

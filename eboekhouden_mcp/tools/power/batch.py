@@ -38,7 +38,9 @@ def _normalize_ids(raw: Any) -> list[int]:
     if isinstance(raw, int):
         raw = [raw]
     if not isinstance(raw, list):
-        raise ValueError("ids must be an array of integers or a JSON/comma string of integers")
+        raise ValueError(
+            "ids must be an array of integers or a JSON/comma string of integers"
+        )
     return [int(value) for value in raw]
 
 
@@ -56,7 +58,9 @@ def _run_batch(
     if not verbose:
         items = [compact(item) for item in items]
     return capped_result(
-        items, truncated, total,
+        items,
+        truncated,
+        total,
         hint="More ids than max_details; split the batch or raise max_details.",
     )
 
@@ -90,8 +94,12 @@ def _ids_schema(entity: str) -> dict[str, Any]:
 
 class _BatchInput(ToolSchema):
     ids: list[int] = Field(description="Ids to fetch")
-    max_details: int = Field(default=_MAX_DETAILS_DEFAULT, description="Max records to fetch/return")
-    verbose: bool = Field(default=False, description="Return raw JSON instead of compact output")
+    max_details: int = Field(
+        default=_MAX_DETAILS_DEFAULT, description="Max records to fetch/return"
+    )
+    verbose: bool = Field(
+        default=False, description="Return raw JSON instead of compact output"
+    )
 
 
 class GetMutationsBatchTool(BaseTool):
@@ -104,7 +112,9 @@ class GetMutationsBatchTool(BaseTool):
     def get_schema(self) -> dict[str, Any]:
         return _ids_schema("Mutation")
 
-    async def execute(self, client: "EBoekhoudenClient", arguments: dict[str, Any]) -> dict[str, Any]:
+    async def execute(
+        self, client: "EBoekhoudenClient", arguments: dict[str, Any]
+    ) -> dict[str, Any]:
         return _run_batch(client.mutations.get, arguments)
 
 
@@ -118,7 +128,9 @@ class GetRelationsBatchTool(BaseTool):
     def get_schema(self) -> dict[str, Any]:
         return _ids_schema("Relation")
 
-    async def execute(self, client: "EBoekhoudenClient", arguments: dict[str, Any]) -> dict[str, Any]:
+    async def execute(
+        self, client: "EBoekhoudenClient", arguments: dict[str, Any]
+    ) -> dict[str, Any]:
         return _run_batch(client.relations.get, arguments)
 
 
@@ -126,11 +138,15 @@ class GetInvoicesBatchTool(BaseTool):
     """Fetch full detail for many invoices at once."""
 
     name = "get_invoices_batch"
-    description = "Fetch full detail (line items, VAT) for a list of invoice ids in one call."
+    description = (
+        "Fetch full detail (line items, VAT) for a list of invoice ids in one call."
+    )
     input_schema = _BatchInput
 
     def get_schema(self) -> dict[str, Any]:
         return _ids_schema("Invoice")
 
-    async def execute(self, client: "EBoekhoudenClient", arguments: dict[str, Any]) -> dict[str, Any]:
+    async def execute(
+        self, client: "EBoekhoudenClient", arguments: dict[str, Any]
+    ) -> dict[str, Any]:
         return _run_batch(client.invoices.get, arguments)

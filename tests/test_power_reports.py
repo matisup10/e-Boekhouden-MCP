@@ -3,7 +3,13 @@
 from __future__ import annotations
 
 from eboekhouden.models.ledger import LedgerBalance, LedgerListItem
-from eboekhouden.models.mutation import Mutation, MutationListItem, MutationRow, OutstandingInvoice, VatAmount
+from eboekhouden.models.mutation import (
+    Mutation,
+    MutationListItem,
+    MutationRow,
+    OutstandingInvoice,
+    VatAmount,
+)
 from eboekhouden_mcp.tools.power.reports import (
     ArApAgingTool,
     BalanceSheetTool,
@@ -24,7 +30,9 @@ class _FakeLedgers:
         return iter(self._ledgers)
 
     def get_balance(self, id, *, cost_center_id=None, from_date=None, to_date=None):
-        self.balance_calls.append({"id": id, "cc": cost_center_id, "from": from_date, "to": to_date})
+        self.balance_calls.append(
+            {"id": id, "cc": cost_center_id, "from": from_date, "to": to_date}
+        )
         return self._balances[id]
 
 
@@ -37,7 +45,9 @@ class _FakeMutations:
     def list(self, **kwargs):
         from types import SimpleNamespace
 
-        return SimpleNamespace(items=list(self._list_items), count=len(self._list_items))
+        return SimpleNamespace(
+            items=list(self._list_items), count=len(self._list_items)
+        )
 
     def get(self, id):
         return self._details[id]
@@ -73,7 +83,9 @@ def _ledgers_client():
 
 async def test_trial_balance_groups_by_category_with_totals():
     client = _ledgers_client()
-    result = await TrialBalanceTool().execute(client, {"from_date": "2026-01-01", "to_date": "2026-12-31"})
+    result = await TrialBalanceTool().execute(
+        client, {"from_date": "2026-01-01", "to_date": "2026-12-31"}
+    )
 
     assert result["grand_total"] == 0.0
     vw = result["by_category"]["VW"]
@@ -112,16 +124,32 @@ async def test_balance_sheet_only_bal_accounts():
 
 async def test_vat_summary_sums_by_code():
     details = {
-        1: Mutation(id=1, type="2", date="2026-03-01", ledgerId=8000, vat=[VatAmount(vatCode="HOOG_VERK_21", amount=21)]),
-        2: Mutation(id=2, type="1", date="2026-03-02", ledgerId=4000, vat=[VatAmount(vatCode="HOOG_INK_21", amount=10)]),
+        1: Mutation(
+            id=1,
+            type="2",
+            date="2026-03-01",
+            ledgerId=8000,
+            vat=[VatAmount(vatCode="HOOG_VERK_21", amount=21)],
+        ),
+        2: Mutation(
+            id=2,
+            type="1",
+            date="2026-03-02",
+            ledgerId=4000,
+            vat=[VatAmount(vatCode="HOOG_INK_21", amount=10)],
+        ),
     }
     list_items = [
         MutationListItem(id=1, type="2", date="2026-03-01", ledgerId=8000, amount=121),
         MutationListItem(id=2, type="1", date="2026-03-02", ledgerId=4000, amount=48),
     ]
-    client = _FakeClient(mutations=_FakeMutations(list_items=list_items, details=details))
+    client = _FakeClient(
+        mutations=_FakeMutations(list_items=list_items, details=details)
+    )
 
-    result = await VatSummaryTool().execute(client, {"date_from": "2026-01-01", "date_to": "2026-03-31"})
+    result = await VatSummaryTool().execute(
+        client, {"date_from": "2026-01-01", "date_to": "2026-03-31"}
+    )
 
     by_code = {row["vat_code"]: row["amount"] for row in result["by_code"]}
     assert by_code == {"HOOG_VERK_21": 21.0, "HOOG_INK_21": 10.0}
@@ -137,13 +165,31 @@ async def test_vat_summary_sums_by_code():
 async def test_ar_ap_aging_buckets_by_age():
     outstanding = {
         "D": [
-            OutstandingInvoice(date="2026-06-01", mutationId=1, relationId=5, company="Acme", totalAmount=100, paidAmount=0, outstandingAmount=100),
-            OutstandingInvoice(date="2026-07-10", mutationId=2, relationId=6, company="Beta", totalAmount=50, paidAmount=0, outstandingAmount=50),
+            OutstandingInvoice(
+                date="2026-06-01",
+                mutationId=1,
+                relationId=5,
+                company="Acme",
+                totalAmount=100,
+                paidAmount=0,
+                outstandingAmount=100,
+            ),
+            OutstandingInvoice(
+                date="2026-07-10",
+                mutationId=2,
+                relationId=6,
+                company="Beta",
+                totalAmount=50,
+                paidAmount=0,
+                outstandingAmount=50,
+            ),
         ]
     }
     client = _FakeClient(mutations=_FakeMutations(outstanding=outstanding))
 
-    result = await ArApAgingTool().execute(client, {"cred_deb": "D", "reference_date": "2026-07-12"})
+    result = await ArApAgingTool().execute(
+        client, {"cred_deb": "D", "reference_date": "2026-07-12"}
+    )
 
     debtors = result["debtors"]
     assert debtors["total"] == 150.0
@@ -163,10 +209,24 @@ async def test_ledger_transactions_running_total():
         MutationListItem(id=2, type="2", date="2026-01-06", ledgerId=9999, amount=10),
     ]
     details = {
-        1: Mutation(id=1, type="2", date="2026-01-05", ledgerId=8000, rows=[MutationRow(ledgerId=4000, amount=300)]),
-        2: Mutation(id=2, type="2", date="2026-01-06", ledgerId=9999, rows=[MutationRow(ledgerId=5000, amount=10)]),
+        1: Mutation(
+            id=1,
+            type="2",
+            date="2026-01-05",
+            ledgerId=8000,
+            rows=[MutationRow(ledgerId=4000, amount=300)],
+        ),
+        2: Mutation(
+            id=2,
+            type="2",
+            date="2026-01-06",
+            ledgerId=9999,
+            rows=[MutationRow(ledgerId=5000, amount=10)],
+        ),
     }
-    client = _FakeClient(mutations=_FakeMutations(list_items=list_items, details=details))
+    client = _FakeClient(
+        mutations=_FakeMutations(list_items=list_items, details=details)
+    )
 
     result = await LedgerTransactionsTool().execute(client, {"ledger_id": 4000})
 

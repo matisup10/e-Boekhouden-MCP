@@ -27,9 +27,17 @@ ALLOWED_ARCHIVE_EXTENSIONS = {".pdf", ".png", ".jpg", ".jpeg", ".webp", ".gif"}
 class SendFileToDigitalArchiveInput(ToolSchema):
     """Input schema for send_file_to_digital_archive."""
 
-    file_path: str = Field(description="Absolute or working-directory-relative path to a local PDF/image file")
-    invoice_number: str | None = Field(default=None, description="Invoice number used in the archive email subject and filename")
-    vendor_name: str | None = Field(default=None, description="Vendor/supplier name used in the archive email subject and filename")
+    file_path: str = Field(
+        description="Absolute or working-directory-relative path to a local PDF/image file"
+    )
+    invoice_number: str | None = Field(
+        default=None,
+        description="Invoice number used in the archive email subject and filename",
+    )
+    vendor_name: str | None = Field(
+        default=None,
+        description="Vendor/supplier name used in the archive email subject and filename",
+    )
     mutation_id: int | None = Field(
         default=None,
         description="Optional mutation ID for response context only; the public e-Boekhouden REST API cannot link the file automatically",
@@ -65,8 +73,27 @@ class SendFileToDigitalArchiveTool(BaseTool):
             "warning": _api_limitation_warning(),
         }
 
+        archive_root = _configured_archive_root()
+        if archive_root is None:
+            result["error"] = (
+                "Archive access is not configured. Set "
+                "EBOEKHOUDEN_MCP_ARCHIVE_ROOT to an allowed directory."
+            )
+            return result
+
+        try:
+            resolved_path = file_path.resolve(strict=True)
+        except OSError:
+            result["error"] = "File not found in the configured archive directory."
+            return result
+
+        if not resolved_path.is_relative_to(archive_root):
+            result["error"] = "File is outside the configured archive directory."
+            return result
+        file_path = resolved_path
+
         if not file_path.exists() or not file_path.is_file():
-            result["error"] = f"File not found: {file_path}"
+            result["error"] = "File not found in the configured archive directory."
             return result
 
         suffix = file_path.suffix.lower()
@@ -100,7 +127,9 @@ class SendFileToDigitalArchiveTool(BaseTool):
 
         archive_filename = f"{_safe_filename_part(vendor_name, 60)} - {_safe_filename_part(invoice_number, 40)}{suffix}"
         result["archive_filename"] = archive_filename
-        content_type = mimetypes.guess_type(archive_filename)[0] or "application/octet-stream"
+        content_type = (
+            mimetypes.guess_type(archive_filename)[0] or "application/octet-stream"
+        )
         file_data = file_path.read_bytes()
 
         try:
@@ -125,7 +154,9 @@ class SendFileToDigitalArchiveTool(BaseTool):
 
 
 def _load_archive_config() -> dict[str, str]:
-    sender = _config_value("MS_GRAPH_SEND_FROM_USER") or _config_value("MS_GRAPH_MAILBOX_USER")
+    sender = _config_value("MS_GRAPH_SEND_FROM_USER") or _config_value(
+        "MS_GRAPH_MAILBOX_USER"
+    )
     return {
         "EBOEKHOUDEN_ARCHIVE_EMAIL": _config_value("EBOEKHOUDEN_ARCHIVE_EMAIL"),
         "MS_GRAPH_TENANT_ID": _config_value("MS_GRAPH_TENANT_ID"),
@@ -133,6 +164,17 @@ def _load_archive_config() -> dict[str, str]:
         "MS_GRAPH_CLIENT_SECRET": _config_value("MS_GRAPH_CLIENT_SECRET"),
         "MS_GRAPH_SEND_FROM_USER": sender,
     }
+
+
+def _configured_archive_root() -> Path | None:
+    value = _config_value("EBOEKHOUDEN_MCP_ARCHIVE_ROOT")
+    if not value:
+        return None
+    try:
+        root = Path(value).expanduser().resolve(strict=True)
+    except OSError:
+        return None
+    return root if root.is_dir() else None
 
 
 def _config_value(name: str) -> str:
@@ -164,8 +206,12 @@ def _read_env_file_value(env_file: Path, name: str) -> str:
         stripped = line.strip()
         if not stripped or stripped.startswith("#") or not stripped.startswith(prefix):
             continue
-        raw_value = stripped[len(prefix):].strip()
-        if len(raw_value) >= 2 and raw_value[0] == raw_value[-1] and raw_value[0] in {"'", '"'}:
+        raw_value = stripped[len(prefix) :].strip()
+        if (
+            len(raw_value) >= 2
+            and raw_value[0] == raw_value[-1]
+            and raw_value[0] in {"'", '"'}
+        ):
             raw_value = raw_value[1:-1]
         return raw_value
     return ""

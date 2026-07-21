@@ -16,18 +16,26 @@ if TYPE_CHECKING:
 class ListInvoicesInput(ToolSchema):
     """Input schema for list_invoices tool."""
 
-    limit: int | None = Field(default=None, description="Number of items to retrieve (max 2000)")
+    limit: int | None = Field(
+        default=None, description="Number of items to retrieve (max 2000)"
+    )
     offset: int | None = Field(default=None, description="Number of items to skip")
-    invoice_number: str | None = Field(default=None, description="Filter by invoice number")
+    invoice_number: str | None = Field(
+        default=None, description="Filter by invoice number"
+    )
     relation_id: int | None = Field(default=None, description="Filter by relation ID")
-    date: str | None = Field(default=None, description="Filter by invoice date (YYYY-MM-DD)")
+    date: str | None = Field(
+        default=None, description="Filter by invoice date (YYYY-MM-DD)"
+    )
 
 
 class ListInvoicesTool(BaseTool):
     """List all invoices."""
 
     name = "list_invoices"
-    description = "List all invoices with optional filters for invoice number, relation, and date"
+    description = (
+        "List all invoices with optional filters for invoice number, relation, and date"
+    )
     input_schema = ListInvoicesInput
 
     async def execute(
@@ -70,7 +78,9 @@ class InvoiceItemInput(ToolSchema):
     """Input schema for an invoice line item."""
 
     description: str = Field(description="Line item description")
-    vat_code: str = Field(description="VAT code (e.g., 'HOOG_VERK_21' for 21% Dutch VAT)")
+    vat_code: str = Field(
+        description="VAT code (e.g., 'HOOG_VERK_21' for 21% Dutch VAT)"
+    )
     ledger_id: int = Field(description="Ledger account ID")
     quantity: float | None = Field(default=None, description="Quantity")
     price_per_unit: float | None = Field(default=None, description="Price per unit")
@@ -84,11 +94,22 @@ class CreateInvoiceInput(ToolSchema):
     term_of_payment: int = Field(description="Payment term in days")
     template_id: int = Field(description="Invoice template ID")
     items: list[dict] = Field(description="List of invoice line items")
-    invoice_number: str | None = Field(default=None, description="Custom invoice number (auto-generated if not provided)")
-    date: str | None = Field(default=None, description="Invoice date (YYYY-MM-DD, defaults to today)")
-    in_ex_vat: str | None = Field(default=None, description="'IN' for VAT inclusive, 'EX' for VAT exclusive")
-    reference: str | None = Field(default=None, description="Reference text (max 50 chars)")
-    text: str | None = Field(default=None, description="Invoice text/notes (max 35000 chars)")
+    invoice_number: str | None = Field(
+        default=None,
+        description="Custom invoice number (auto-generated if not provided)",
+    )
+    date: str | None = Field(
+        default=None, description="Invoice date (YYYY-MM-DD, defaults to today)"
+    )
+    in_ex_vat: str | None = Field(
+        default=None, description="'IN' for VAT inclusive, 'EX' for VAT exclusive"
+    )
+    reference: str | None = Field(
+        default=None, description="Reference text (max 50 chars)"
+    )
+    text: str | None = Field(
+        default=None, description="Invoice text/notes (max 35000 chars)"
+    )
 
 
 class CreateInvoiceTool(BaseTool):

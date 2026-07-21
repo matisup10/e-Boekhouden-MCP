@@ -12,7 +12,9 @@ from eboekhouden_mcp.tools.archive import SendFileToDigitalArchiveTool
 
 
 @pytest.mark.asyncio
-async def test_send_file_to_digital_archive_reports_missing_configuration(tmp_path, monkeypatch):
+async def test_send_file_to_digital_archive_reports_missing_configuration(
+    tmp_path, monkeypatch
+):
     """The archive tool should fail clearly when Graph/archive settings are absent."""
     monkeypatch.chdir(tmp_path)
     for key in (
@@ -27,6 +29,7 @@ async def test_send_file_to_digital_archive_reports_missing_configuration(tmp_pa
 
     file_path = tmp_path / "invoice.pdf"
     file_path.write_bytes(b"%PDF test")
+    monkeypatch.setenv("EBOEKHOUDEN_MCP_ARCHIVE_ROOT", str(tmp_path))
 
     result = await SendFileToDigitalArchiveTool().execute(
         client=None,
@@ -52,6 +55,7 @@ async def test_send_file_to_digital_archive_posts_graph_send_mail_payload(
     file_path = tmp_path / "invoice.pdf"
     file_bytes = b"%PDF test invoice"
     file_path.write_bytes(file_bytes)
+    monkeypatch.setenv("EBOEKHOUDEN_MCP_ARCHIVE_ROOT", str(tmp_path))
 
     monkeypatch.setenv("EBOEKHOUDEN_ARCHIVE_EMAIL", "1594863@e-Boekhouden.nl")
     monkeypatch.setenv("MS_GRAPH_TENANT_ID", "tenant-id")
@@ -75,7 +79,9 @@ async def test_send_file_to_digital_archive_posts_graph_send_mail_payload(
             posts.append({"url": url, **kwargs})
             request = httpx.Request("POST", url)
             if url.endswith("/oauth2/v2.0/token"):
-                return httpx.Response(200, json={"access_token": "graph-token"}, request=request)
+                return httpx.Response(
+                    200, json={"access_token": "graph-token"}, request=request
+                )
             return httpx.Response(202, request=request)
 
     monkeypatch.setattr("eboekhouden_mcp.tools.archive.httpx.Client", FakeClient)
@@ -105,7 +111,10 @@ async def test_send_file_to_digital_archive_posts_graph_send_mail_payload(
     assert send_mail_request["headers"]["Authorization"] == "Bearer graph-token"
     payload = send_mail_request["json"]
     message = payload["message"]
-    assert message["toRecipients"][0]["emailAddress"]["address"] == "1594863@e-Boekhouden.nl"
+    assert (
+        message["toRecipients"][0]["emailAddress"]["address"]
+        == "1594863@e-Boekhouden.nl"
+    )
     attachment = message["attachments"][0]
     assert attachment["name"] == "Supplier BV - INV-1.pdf"
     assert attachment["contentType"] == "application/pdf"
@@ -119,3 +128,21 @@ def test_archive_tool_is_registered():
 
     assert "send_file_to_digital_archive" in registry
     assert len(registry) == 49  # 37 base + 12 power tools
+
+
+@pytest.mark.asyncio
+async def test_archive_tool_rejects_files_outside_allowed_root(tmp_path, monkeypatch):
+    """The archive helper must not become an arbitrary local-file reader."""
+    allowed = tmp_path / "allowed"
+    allowed.mkdir()
+    outside = tmp_path / "outside.pdf"
+    outside.write_bytes(b"%PDF private")
+    monkeypatch.setenv("EBOEKHOUDEN_MCP_ARCHIVE_ROOT", str(allowed))
+
+    result = await SendFileToDigitalArchiveTool().execute(
+        client=None,
+        arguments={"file_path": str(outside)},
+    )
+
+    assert result["sent"] is False
+    assert result["error"] == "File is outside the configured archive directory."

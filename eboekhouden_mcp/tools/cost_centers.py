@@ -16,9 +16,13 @@ if TYPE_CHECKING:
 class ListCostCentersInput(ToolSchema):
     """Input schema for list_cost_centers tool."""
 
-    limit: int | None = Field(default=None, description="Number of items to retrieve (max 2000)")
+    limit: int | None = Field(
+        default=None, description="Number of items to retrieve (max 2000)"
+    )
     offset: int | None = Field(default=None, description="Number of items to skip")
-    parent_id: str | None = Field(default=None, description="Filter by parent cost center ID")
+    parent_id: str | None = Field(
+        default=None, description="Filter by parent cost center ID"
+    )
     description: str | None = Field(default=None, description="Filter by description")
 
 
@@ -68,7 +72,9 @@ class CreateCostCenterInput(ToolSchema):
     """Input schema for create_cost_center tool."""
 
     description: str = Field(description="Cost center description (max 50 chars)")
-    parent_id: int | None = Field(default=None, description="Parent cost center ID for hierarchy")
+    parent_id: int | None = Field(
+        default=None, description="Parent cost center ID for hierarchy"
+    )
 
 
 class CreateCostCenterTool(BaseTool):

@@ -29,6 +29,7 @@ if TYPE_CHECKING:
 _SCAN_LIMIT_DEFAULT = 500
 _MAX_DETAILS_DEFAULT = 50
 
+
 # Local date parser (kept here so _helpers stays filter-focused).
 def _pdate(value: Any) -> datetime.date | None:
     return parse_date(value)
@@ -72,12 +73,19 @@ def _ledger_balances(
 class _PeriodInput(ToolSchema):
     from_date: str | None = Field(default=None, description="Period start (YYYY-MM-DD)")
     to_date: str | None = Field(default=None, description="Period end (YYYY-MM-DD)")
-    cost_center_id: int | None = Field(default=None, description="Restrict to a single cost center")
-    format: str | None = Field(default="json", description="'json' (default) or 'markdown'")
+    cost_center_id: int | None = Field(
+        default=None, description="Restrict to a single cost center"
+    )
+    format: str | None = Field(
+        default="json", description="'json' (default) or 'markdown'"
+    )
 
 
 class TrialBalanceInput(_PeriodInput):
-    category: str | None = Field(default=None, description="Restrict to one ledger category (e.g. BAL, VW, FIN, DEB, CRED)")
+    category: str | None = Field(
+        default=None,
+        description="Restrict to one ledger category (e.g. BAL, VW, FIN, DEB, CRED)",
+    )
 
 
 class TrialBalanceTool(BaseTool):
@@ -90,7 +98,9 @@ class TrialBalanceTool(BaseTool):
     )
     input_schema = TrialBalanceInput
 
-    async def execute(self, client: "EBoekhoudenClient", arguments: dict[str, Any]) -> dict[str, Any]:
+    async def execute(
+        self, client: "EBoekhoudenClient", arguments: dict[str, Any]
+    ) -> dict[str, Any]:
         category = arguments.get("category")
         categories = {category} if category else None
         rows = _ledger_balances(
@@ -103,7 +113,9 @@ class TrialBalanceTool(BaseTool):
 
         by_category: dict[str, Any] = {}
         for row in rows:
-            bucket = by_category.setdefault(row["category"], {"total": 0.0, "accounts": []})
+            bucket = by_category.setdefault(
+                row["category"], {"total": 0.0, "accounts": []}
+            )
             bucket["accounts"].append(row)
             bucket["total"] = round2(bucket["total"] + row["balance"])
 
@@ -115,7 +127,9 @@ class TrialBalanceTool(BaseTool):
             "grand_total": round2(sum(row["balance"] for row in rows)),
         }
         if arguments.get("format") == "markdown":
-            result["markdown"] = to_markdown_table(rows, ["code", "description", "category", "balance"])
+            result["markdown"] = to_markdown_table(
+                rows, ["code", "description", "category", "balance"]
+            )
         return result
 
 
@@ -129,7 +143,9 @@ class ProfitLossTool(BaseTool):
     )
     input_schema = _PeriodInput
 
-    async def execute(self, client: "EBoekhoudenClient", arguments: dict[str, Any]) -> dict[str, Any]:
+    async def execute(
+        self, client: "EBoekhoudenClient", arguments: dict[str, Any]
+    ) -> dict[str, Any]:
         rows = _ledger_balances(
             client,
             from_date=_pdate(arguments.get("from_date")),
@@ -152,7 +168,9 @@ class ProfitLossTool(BaseTool):
             "expenses": expenses,
         }
         if arguments.get("format") == "markdown":
-            result["markdown"] = to_markdown_table(rows, ["code", "description", "balance"])
+            result["markdown"] = to_markdown_table(
+                rows, ["code", "description", "balance"]
+            )
         return result
 
 
@@ -166,7 +184,9 @@ class BalanceSheetTool(BaseTool):
     )
     input_schema = _PeriodInput
 
-    async def execute(self, client: "EBoekhoudenClient", arguments: dict[str, Any]) -> dict[str, Any]:
+    async def execute(
+        self, client: "EBoekhoudenClient", arguments: dict[str, Any]
+    ) -> dict[str, Any]:
         rows = _ledger_balances(
             client,
             from_date=_pdate(arguments.get("from_date")),
@@ -187,7 +207,9 @@ class BalanceSheetTool(BaseTool):
             "rows": rows,
         }
         if arguments.get("format") == "markdown":
-            result["markdown"] = to_markdown_table(rows, ["code", "description", "balance"])
+            result["markdown"] = to_markdown_table(
+                rows, ["code", "description", "balance"]
+            )
         return result
 
 
@@ -199,9 +221,17 @@ class BalanceSheetTool(BaseTool):
 class VatSummaryInput(ToolSchema):
     date_from: str | None = Field(default=None, description="Period start (YYYY-MM-DD)")
     date_to: str | None = Field(default=None, description="Period end (YYYY-MM-DD)")
-    max_details: int = Field(default=_MAX_DETAILS_DEFAULT, description="Max mutations to hydrate (accuracy is bounded by this; raise for full periods)")
-    scan_limit: int = Field(default=_SCAN_LIMIT_DEFAULT, description="Max candidate mutations pulled before hydration (max 2000)")
-    format: str | None = Field(default="json", description="'json' (default) or 'markdown'")
+    max_details: int = Field(
+        default=_MAX_DETAILS_DEFAULT,
+        description="Max mutations to hydrate (accuracy is bounded by this; raise for full periods)",
+    )
+    scan_limit: int = Field(
+        default=_SCAN_LIMIT_DEFAULT,
+        description="Max candidate mutations pulled before hydration (max 2000)",
+    )
+    format: str | None = Field(
+        default="json", description="'json' (default) or 'markdown'"
+    )
 
 
 class VatSummaryTool(BaseTool):
@@ -214,13 +244,17 @@ class VatSummaryTool(BaseTool):
     )
     input_schema = VatSummaryInput
 
-    async def execute(self, client: "EBoekhoudenClient", arguments: dict[str, Any]) -> dict[str, Any]:
+    async def execute(
+        self, client: "EBoekhoudenClient", arguments: dict[str, Any]
+    ) -> dict[str, Any]:
         scan_limit = min(int(arguments.get("scan_limit", _SCAN_LIMIT_DEFAULT)), 2000)
         max_details = int(arguments.get("max_details", _MAX_DETAILS_DEFAULT))
 
         candidates = client.mutations.list(
             limit=scan_limit,
-            date_filter=range_date_filter(arguments.get("date_from"), arguments.get("date_to")),
+            date_filter=range_date_filter(
+                arguments.get("date_from"), arguments.get("date_to")
+            ),
         ).items
         truncated = len(candidates) > max_details or len(candidates) >= scan_limit
         selected = candidates[:max_details]
@@ -238,7 +272,10 @@ class VatSummaryTool(BaseTool):
                     if row.vat_amount is not None and row.vat_code:
                         totals[str(row.vat_code)] += float(row.vat_amount)
 
-        by_code = [{"vat_code": code, "amount": round2(amount)} for code, amount in sorted(totals.items())]
+        by_code = [
+            {"vat_code": code, "amount": round2(amount)}
+            for code, amount in sorted(totals.items())
+        ]
         result: dict[str, Any] = {
             "date_from": arguments.get("date_from"),
             "date_to": arguments.get("date_to"),
@@ -248,7 +285,9 @@ class VatSummaryTool(BaseTool):
             "total_vat": round2(sum(totals.values())),
         }
         if truncated:
-            result["hint"] = "Not all mutations in range were hydrated; raise max_details/scan_limit or narrow the period for exact figures."
+            result["hint"] = (
+                "Not all mutations in range were hydrated; raise max_details/scan_limit or narrow the period for exact figures."
+            )
         if arguments.get("format") == "markdown":
             result["markdown"] = to_markdown_table(by_code, ["vat_code", "amount"])
         return result
@@ -271,7 +310,9 @@ def _bucket_for(age_days: int) -> str:
     return "90+"
 
 
-def _age_side(client: "EBoekhoudenClient", cred_deb: str, reference: datetime.date) -> dict[str, Any]:
+def _age_side(
+    client: "EBoekhoudenClient", cred_deb: str, reference: datetime.date
+) -> dict[str, Any]:
     per_relation: dict[int, dict[str, Any]] = {}
     bucket_totals: dict[str, float] = {bucket: 0.0 for bucket in _BUCKETS}
     grand_total = 0.0
@@ -285,8 +326,12 @@ def _age_side(client: "EBoekhoudenClient", cred_deb: str, reference: datetime.da
 
         relation = per_relation.setdefault(
             invoice.relation_id,
-            {"relation_id": invoice.relation_id, "company": invoice.company, "total": 0.0,
-             "buckets": {b: 0.0 for b in _BUCKETS}},
+            {
+                "relation_id": invoice.relation_id,
+                "company": invoice.company,
+                "total": 0.0,
+                "buckets": {b: 0.0 for b in _BUCKETS},
+            },
         )
         relation["total"] = round2(relation["total"] + amount)
         relation["buckets"][bucket] = round2(relation["buckets"][bucket] + amount)
@@ -299,9 +344,17 @@ def _age_side(client: "EBoekhoudenClient", cred_deb: str, reference: datetime.da
 
 
 class ArApAgingInput(ToolSchema):
-    cred_deb: str | None = Field(default=None, description="'D' debtors (AR) or 'C' creditors (AP). Omit for both.")
-    reference_date: str | None = Field(default=None, description="Age invoices relative to this date (YYYY-MM-DD). Defaults to today.")
-    format: str | None = Field(default="json", description="'json' (default) or 'markdown'")
+    cred_deb: str | None = Field(
+        default=None,
+        description="'D' debtors (AR) or 'C' creditors (AP). Omit for both.",
+    )
+    reference_date: str | None = Field(
+        default=None,
+        description="Age invoices relative to this date (YYYY-MM-DD). Defaults to today.",
+    )
+    format: str | None = Field(
+        default="json", description="'json' (default) or 'markdown'"
+    )
 
 
 class ArApAgingTool(BaseTool):
@@ -314,7 +367,9 @@ class ArApAgingTool(BaseTool):
     )
     input_schema = ArApAgingInput
 
-    async def execute(self, client: "EBoekhoudenClient", arguments: dict[str, Any]) -> dict[str, Any]:
+    async def execute(
+        self, client: "EBoekhoudenClient", arguments: dict[str, Any]
+    ) -> dict[str, Any]:
         reference = _pdate(arguments.get("reference_date")) or datetime.date.today()
         requested = arguments.get("cred_deb")
         sides = [requested] if requested else ["D", "C"]
@@ -329,10 +384,17 @@ class ArApAgingTool(BaseTool):
             for side in sides:
                 key = "debtors" if side == "D" else "creditors"
                 rows = [
-                    {"relation_id": r["relation_id"], "company": r["company"], "total": r["total"]}
+                    {
+                        "relation_id": r["relation_id"],
+                        "company": r["company"],
+                        "total": r["total"],
+                    }
                     for r in result[key]["relations"]
                 ]
-                markdowns.append(f"### {key}\n" + to_markdown_table(rows, ["relation_id", "company", "total"]))
+                markdowns.append(
+                    f"### {key}\n"
+                    + to_markdown_table(rows, ["relation_id", "company", "total"])
+                )
             result["markdown"] = "\n\n".join(markdowns)
         return result
 
@@ -344,11 +406,20 @@ class ArApAgingTool(BaseTool):
 
 class LedgerTransactionsInput(ToolSchema):
     ledger_id: int = Field(description="Ledger account id to report transactions for")
-    date_from: str | None = Field(default=None, description="On/after date (YYYY-MM-DD)")
+    date_from: str | None = Field(
+        default=None, description="On/after date (YYYY-MM-DD)"
+    )
     date_to: str | None = Field(default=None, description="On/before date (YYYY-MM-DD)")
-    max_details: int = Field(default=_MAX_DETAILS_DEFAULT, description="Max matching mutations to return")
-    scan_limit: int = Field(default=_SCAN_LIMIT_DEFAULT, description="Max candidate mutations pulled before filtering (max 2000)")
-    verbose: bool = Field(default=False, description="Return raw JSON instead of compact output")
+    max_details: int = Field(
+        default=_MAX_DETAILS_DEFAULT, description="Max matching mutations to return"
+    )
+    scan_limit: int = Field(
+        default=_SCAN_LIMIT_DEFAULT,
+        description="Max candidate mutations pulled before filtering (max 2000)",
+    )
+    verbose: bool = Field(
+        default=False, description="Return raw JSON instead of compact output"
+    )
 
 
 class LedgerTransactionsTool(BaseTool):
@@ -361,7 +432,9 @@ class LedgerTransactionsTool(BaseTool):
     )
     input_schema = LedgerTransactionsInput
 
-    async def execute(self, client: "EBoekhoudenClient", arguments: dict[str, Any]) -> dict[str, Any]:
+    async def execute(
+        self, client: "EBoekhoudenClient", arguments: dict[str, Any]
+    ) -> dict[str, Any]:
         ledger_id = arguments["ledger_id"]
         verbose = bool(arguments.get("verbose", False))
         scan_limit = min(int(arguments.get("scan_limit", _SCAN_LIMIT_DEFAULT)), 2000)
@@ -369,7 +442,9 @@ class LedgerTransactionsTool(BaseTool):
 
         candidates = client.mutations.list(
             limit=scan_limit,
-            date_filter=range_date_filter(arguments.get("date_from"), arguments.get("date_to")),
+            date_filter=range_date_filter(
+                arguments.get("date_from"), arguments.get("date_to")
+            ),
         ).items
         scan_truncated = len(candidates) >= scan_limit
 

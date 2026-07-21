@@ -32,8 +32,20 @@ class _FakeClient:
 async def test_get_mutations_batch_returns_full_detail():
     mutations = _FakeService(
         {
-            10: Mutation(id=10, type="2", date="2026-01-05", ledgerId=8000, rows=[MutationRow(ledgerId=4000, amount=50)]),
-            11: Mutation(id=11, type="2", date="2026-01-06", ledgerId=8000, rows=[MutationRow(ledgerId=4000, amount=75)]),
+            10: Mutation(
+                id=10,
+                type="2",
+                date="2026-01-05",
+                ledgerId=8000,
+                rows=[MutationRow(ledgerId=4000, amount=50)],
+            ),
+            11: Mutation(
+                id=11,
+                type="2",
+                date="2026-01-06",
+                ledgerId=8000,
+                rows=[MutationRow(ledgerId=4000, amount=75)],
+            ),
         }
     )
     client = _FakeClient(mutations=mutations)
@@ -46,11 +58,16 @@ async def test_get_mutations_batch_returns_full_detail():
 
 
 async def test_get_mutations_batch_respects_cap():
-    details = {i: Mutation(id=i, type="2", date="2026-01-05", ledgerId=8000) for i in range(1, 6)}
+    details = {
+        i: Mutation(id=i, type="2", date="2026-01-05", ledgerId=8000)
+        for i in range(1, 6)
+    }
     mutations = _FakeService(details)
     client = _FakeClient(mutations=mutations)
 
-    result = await GetMutationsBatchTool().execute(client, {"ids": [1, 2, 3, 4, 5], "max_details": 2})
+    result = await GetMutationsBatchTool().execute(
+        client, {"ids": [1, 2, 3, 4, 5], "max_details": 2}
+    )
 
     assert result["count"] == 2
     assert result["truncated"] is True
@@ -64,7 +81,9 @@ async def test_get_mutations_batch_empty_ids_errors():
 
 
 async def test_get_mutations_batch_accepts_json_string_ids():
-    mutations = _FakeService({10: Mutation(id=10, type="2", date="2026-01-05", ledgerId=8000)})
+    mutations = _FakeService(
+        {10: Mutation(id=10, type="2", date="2026-01-05", ledgerId=8000)}
+    )
     client = _FakeClient(mutations=mutations)
 
     result = await GetMutationsBatchTool().execute(client, {"ids": "[10]"})
@@ -73,7 +92,9 @@ async def test_get_mutations_batch_accepts_json_string_ids():
 
 
 async def test_get_relations_batch_returns_names():
-    relations = _FakeService({1: Relation(id=1, name="Acme BV"), 2: Relation(id=2, name="Beta NV")})
+    relations = _FakeService(
+        {1: Relation(id=1, name="Acme BV"), 2: Relation(id=2, name="Beta NV")}
+    )
     client = _FakeClient(relations=relations)
 
     result = await GetRelationsBatchTool().execute(client, {"ids": [1, 2]})
@@ -84,9 +105,20 @@ async def test_get_invoices_batch_returns_line_items():
     invoices = _FakeService(
         {
             7: Invoice(
-                id=7, invoiceNumber="INV-7", relationId=5, date="2026-02-01",
-                termOfPayment=14, templateId=1, totalExcl=100, totalAmount=121, vatAmount=21,
-                items=[InvoiceItem(description="Widget", vatCode="HOOG_VERK_21", ledgerId=8000)],
+                id=7,
+                invoiceNumber="INV-7",
+                relationId=5,
+                date="2026-02-01",
+                termOfPayment=14,
+                templateId=1,
+                totalExcl=100,
+                totalAmount=121,
+                vatAmount=21,
+                items=[
+                    InvoiceItem(
+                        description="Widget", vatCode="HOOG_VERK_21", ledgerId=8000
+                    )
+                ],
             )
         }
     )

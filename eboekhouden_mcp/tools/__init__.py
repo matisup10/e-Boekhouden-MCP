@@ -59,6 +59,38 @@ from eboekhouden_mcp.tools.units import ListUnitsTool
 from eboekhouden_mcp.tools.power import register_power_tools
 
 
+WRITE_TOOL_NAMES = frozenset(
+    {
+        "create_relation",
+        "update_relation",
+        "delete_relation",
+        "create_invoice",
+        "create_mutation",
+        "create_product",
+        "update_product",
+        "delete_product",
+        "create_ledger",
+        "update_ledger",
+        "create_cost_center",
+        "delete_cost_center",
+        "create_member",
+        "delete_member",
+        "send_file_to_digital_archive",
+    }
+)
+
+DESTRUCTIVE_TOOL_NAMES = frozenset(
+    {
+        "delete_relation",
+        "delete_product",
+        "delete_cost_center",
+        "delete_member",
+    }
+)
+
+ARCHIVE_TOOL_NAME = "send_file_to_digital_archive"
+
+
 def register_all_tools(registry: ToolRegistry) -> None:
     """Register all available tools with the registry."""
     # Relations (5 tools)
@@ -129,4 +161,7 @@ __all__ = [
     "ToolRegistry",
     "register_all_tools",
     "register_power_tools",
+    "WRITE_TOOL_NAMES",
+    "DESTRUCTIVE_TOOL_NAMES",
+    "ARCHIVE_TOOL_NAME",
 ]

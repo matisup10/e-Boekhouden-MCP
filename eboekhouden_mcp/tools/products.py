@@ -16,17 +16,23 @@ if TYPE_CHECKING:
 class ListProductsInput(ToolSchema):
     """Input schema for list_products tool."""
 
-    limit: int | None = Field(default=None, description="Number of items to retrieve (max 2000)")
+    limit: int | None = Field(
+        default=None, description="Number of items to retrieve (max 2000)"
+    )
     offset: int | None = Field(default=None, description="Number of items to skip")
     code: str | None = Field(default=None, description="Filter by product code")
-    group_code: str | None = Field(default=None, description="Filter by product group code")
+    group_code: str | None = Field(
+        default=None, description="Filter by product group code"
+    )
 
 
 class ListProductsTool(BaseTool):
     """List all products."""
 
     name = "list_products"
-    description = "List all products in the catalog with optional filters for code and group"
+    description = (
+        "List all products in the catalog with optional filters for code and group"
+    )
     input_schema = ListProductsInput
 
     async def execute(
@@ -73,10 +79,14 @@ class CreateProductInput(ToolSchema):
     ledger_id: int = Field(description="Ledger account ID for revenue")
     price_excl: float | None = Field(default=None, description="Price excluding VAT")
     price_incl: float | None = Field(default=None, description="Price including VAT")
-    purchase_price_excl: float | None = Field(default=None, description="Purchase price excluding VAT")
+    purchase_price_excl: float | None = Field(
+        default=None, description="Purchase price excluding VAT"
+    )
     unit_id: int | None = Field(default=None, description="Unit of measurement ID")
     group_code: str | None = Field(default=None, description="Product group code")
-    cost_center_id: int | None = Field(default=None, description="Default cost center ID")
+    cost_center_id: int | None = Field(
+        default=None, description="Default cost center ID"
+    )
     active: bool | None = Field(default=True, description="Whether product is active")
 
 
@@ -171,7 +181,9 @@ class DeleteProductTool(BaseTool):
 class ListProductGroupsInput(ToolSchema):
     """Input schema for list_product_groups tool."""
 
-    limit: int | None = Field(default=None, description="Number of items to retrieve (max 2000)")
+    limit: int | None = Field(
+        default=None, description="Number of items to retrieve (max 2000)"
+    )
     offset: int | None = Field(default=None, description="Number of items to skip")
 
 

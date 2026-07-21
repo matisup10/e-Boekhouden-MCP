@@ -15,10 +15,14 @@ if TYPE_CHECKING:
 class ListInvoiceTemplatesInput(ToolSchema):
     """Input schema for list_invoice_templates tool."""
 
-    limit: int | None = Field(default=None, description="Number of items to retrieve (max 2000)")
+    limit: int | None = Field(
+        default=None, description="Number of items to retrieve (max 2000)"
+    )
     offset: int | None = Field(default=None, description="Number of items to skip")
     name: str | None = Field(default=None, description="Filter by template name")
-    type: str | None = Field(default=None, description="Filter by type: 'E' for Editor, 'A' for Advanced")
+    type: str | None = Field(
+        default=None, description="Filter by type: 'E' for Editor, 'A' for Advanced"
+    )
     active: bool | None = Field(default=None, description="Filter by active status")
 
 
@@ -48,7 +52,9 @@ class ListInvoiceTemplatesTool(BaseTool):
 class ListEmailTemplatesInput(ToolSchema):
     """Input schema for list_email_templates tool."""
 
-    limit: int | None = Field(default=None, description="Number of items to retrieve (max 2000)")
+    limit: int | None = Field(
+        default=None, description="Number of items to retrieve (max 2000)"
+    )
     offset: int | None = Field(default=None, description="Number of items to skip")
 
 
