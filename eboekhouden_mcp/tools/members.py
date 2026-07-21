@@ -7,19 +7,15 @@ from typing import TYPE_CHECKING, Any
 from pydantic import Field
 
 from eboekhouden.models.member import CreateMember
-from eboekhouden_mcp.tools.base import BaseTool, ToolSchema
+from eboekhouden_mcp.tools.base import BaseTool, PaginatedInput, ToolSchema
 
 if TYPE_CHECKING:
     from eboekhouden import EBoekhoudenClient
 
 
-class ListMembersInput(ToolSchema):
+class ListMembersInput(PaginatedInput):
     """Input schema for list_members tool."""
 
-    limit: int | None = Field(
-        default=None, description="Number of items to retrieve (max 2000)"
-    )
-    offset: int | None = Field(default=None, description="Number of items to skip")
     member_number: str | None = Field(
         default=None, description="Filter by member number"
     )

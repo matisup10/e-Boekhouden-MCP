@@ -7,19 +7,15 @@ from typing import TYPE_CHECKING, Any
 from pydantic import Field
 
 from eboekhouden.models.product import CreateProduct, PatchProduct
-from eboekhouden_mcp.tools.base import BaseTool, ToolSchema
+from eboekhouden_mcp.tools.base import BaseTool, PaginatedInput, ToolSchema
 
 if TYPE_CHECKING:
     from eboekhouden import EBoekhoudenClient
 
 
-class ListProductsInput(ToolSchema):
+class ListProductsInput(PaginatedInput):
     """Input schema for list_products tool."""
 
-    limit: int | None = Field(
-        default=None, description="Number of items to retrieve (max 2000)"
-    )
-    offset: int | None = Field(default=None, description="Number of items to skip")
     code: str | None = Field(default=None, description="Filter by product code")
     group_code: str | None = Field(
         default=None, description="Filter by product group code"
@@ -178,13 +174,8 @@ class DeleteProductTool(BaseTool):
         return {"success": True, "id": arguments["id"]}
 
 
-class ListProductGroupsInput(ToolSchema):
+class ListProductGroupsInput(PaginatedInput):
     """Input schema for list_product_groups tool."""
-
-    limit: int | None = Field(
-        default=None, description="Number of items to retrieve (max 2000)"
-    )
-    offset: int | None = Field(default=None, description="Number of items to skip")
 
 
 class ListProductGroupsTool(BaseTool):

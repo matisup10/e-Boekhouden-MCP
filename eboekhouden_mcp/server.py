@@ -202,6 +202,25 @@ def create_server(config: MCPConfig | None = None) -> Server:
             execution_arguments.pop(WRITE_CONFIRMATION_FIELD)
 
         try:
+            validated = tool.input_schema.model_validate(execution_arguments)
+            execution_arguments = validated.model_dump(exclude_none=True)
+        except ValidationError as exc:
+            details = [
+                {
+                    "field": ".".join(str(part) for part in error["loc"]),
+                    "message": error["msg"],
+                    "type": error["type"],
+                }
+                for error in exc.errors(include_input=False)
+            ]
+            return _error_result(
+                {
+                    "error": "Invalid tool arguments",
+                    "details": details,
+                }
+            )
+
+        try:
             async with mcp_server.get_client() as client:
                 result = await tool.execute(client, execution_arguments)
                 return [

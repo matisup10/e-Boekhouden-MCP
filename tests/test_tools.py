@@ -1,7 +1,12 @@
 """Tests for MCP tools."""
 
+import pytest
+from pydantic import ValidationError
+
 from eboekhouden_mcp.tools import WRITE_TOOL_NAMES, ToolRegistry, register_all_tools
 from eboekhouden_mcp.tools.base import BaseTool
+from eboekhouden_mcp.tools.invoices import CreateInvoiceInput
+from eboekhouden_mcp.tools.relations import ListRelationsInput
 
 
 class TestToolRegistry:
@@ -122,3 +127,34 @@ class TestToolSchemas:
             assert isinstance(schema, dict)
             # Should not have title (MCP expects clean schema)
             assert "title" not in schema
+
+    def test_paginated_inputs_enforce_api_bounds(self):
+        schema = ListRelationsInput.model_json_schema()
+
+        assert schema["properties"]["limit"]["anyOf"][0]["minimum"] == 1
+        assert schema["properties"]["limit"]["anyOf"][0]["maximum"] == 2000
+        assert schema["properties"]["offset"]["anyOf"][0]["minimum"] == 0
+
+        with pytest.raises(ValidationError):
+            ListRelationsInput(limit=2001)
+        with pytest.raises(ValidationError):
+            ListRelationsInput(offset=-1)
+
+    def test_invoice_items_have_a_strict_nested_schema(self):
+        schema = CreateInvoiceInput.model_json_schema()
+
+        assert schema["properties"]["items"]["minItems"] == 1
+        assert schema["properties"]["items"]["maxItems"] == 500
+        assert schema["$defs"]["InvoiceItemInput"]["additionalProperties"] is False
+
+        with pytest.raises(ValidationError):
+            CreateInvoiceInput(
+                relation_id=1,
+                term_of_payment=14,
+                template_id=1,
+                items=[{"description": "Missing required line fields"}],
+            )
+
+    def test_tool_inputs_reject_unknown_fields(self):
+        with pytest.raises(ValidationError):
+            ListRelationsInput(unexpected=True)

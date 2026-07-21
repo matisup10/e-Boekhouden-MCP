@@ -7,19 +7,15 @@ from typing import TYPE_CHECKING, Any
 from pydantic import Field
 
 from eboekhouden.models.relation import CreateRelation, PatchRelation
-from eboekhouden_mcp.tools.base import BaseTool, ToolSchema
+from eboekhouden_mcp.tools.base import BaseTool, PaginatedInput, ToolSchema
 
 if TYPE_CHECKING:
     from eboekhouden import EBoekhoudenClient
 
 
-class ListRelationsInput(ToolSchema):
+class ListRelationsInput(PaginatedInput):
     """Input schema for list_relations tool."""
 
-    limit: int | None = Field(
-        default=None, description="Number of items to retrieve (max 2000)"
-    )
-    offset: int | None = Field(default=None, description="Number of items to skip")
     code: str | None = Field(default=None, description="Filter by relation code")
     type: str | None = Field(
         default=None, description="Filter by type ('B' for business or 'P' for private)"

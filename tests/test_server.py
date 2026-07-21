@@ -135,3 +135,22 @@ async def test_write_call_requires_explicit_confirmation_before_api_access():
 
     assert result.root.isError is True
     assert "Explicit write confirmation required" in result.root.content[0].text
+
+
+@pytest.mark.asyncio
+async def test_invalid_tool_arguments_are_rejected_before_api_access():
+    server = create_server(MCPConfig(secret_token="test-token", _env_file=None))
+
+    result = await server.request_handlers[CallToolRequest](
+        CallToolRequest(
+            params=CallToolRequestParams(
+                name="list_relations",
+                arguments={"limit": 2001, "unexpected": "not echoed"},
+            )
+        )
+    )
+
+    assert result.root.isError is True
+    assert "Input validation error" in result.root.content[0].text
+    assert "unexpected" in result.root.content[0].text
+    assert "not echoed" not in result.root.content[0].text

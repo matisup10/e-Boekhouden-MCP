@@ -4,21 +4,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from pydantic import Field
-
-from eboekhouden_mcp.tools.base import BaseTool, ToolSchema
+from eboekhouden_mcp.tools.base import BaseTool, PaginatedInput
 
 if TYPE_CHECKING:
     from eboekhouden import EBoekhoudenClient
 
 
-class ListAdministrationsInput(ToolSchema):
+class ListAdministrationsInput(PaginatedInput):
     """Input schema for list_administrations tool."""
-
-    limit: int | None = Field(
-        default=None, description="Number of items to retrieve (max 2000)"
-    )
-    offset: int | None = Field(default=None, description="Number of items to skip")
 
 
 class ListAdministrationsTool(BaseTool):
@@ -41,13 +34,8 @@ class ListAdministrationsTool(BaseTool):
         }
 
 
-class ListLinkedAdministrationsInput(ToolSchema):
+class ListLinkedAdministrationsInput(PaginatedInput):
     """Input schema for list_linked_administrations tool."""
-
-    limit: int | None = Field(
-        default=None, description="Number of items to retrieve (max 2000)"
-    )
-    offset: int | None = Field(default=None, description="Number of items to skip")
 
 
 class ListLinkedAdministrationsTool(BaseTool):

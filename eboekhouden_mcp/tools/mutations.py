@@ -5,22 +5,18 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, Any, Literal
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from eboekhouden.models.mutation import CreateMutation, CreateMutationRow
-from eboekhouden_mcp.tools.base import BaseTool, ToolSchema
+from eboekhouden_mcp.tools.base import BaseTool, PaginatedInput, ToolSchema
 
 if TYPE_CHECKING:
     from eboekhouden import EBoekhoudenClient
 
 
-class ListMutationsInput(ToolSchema):
+class ListMutationsInput(PaginatedInput):
     """Input schema for list_mutations tool."""
 
-    limit: int | None = Field(
-        default=None, description="Number of items to retrieve (max 2000)"
-    )
-    offset: int | None = Field(default=None, description="Number of items to skip")
     type: int | None = Field(
         default=None,
         description="Mutation type (1-7): 1=Invoice received, 2=Invoice sent, 3=Payment received, 4=Payment made, 5=Bank/cash, 6=Deposit, 7=General journal",
@@ -76,6 +72,19 @@ class GetMutationTool(BaseTool):
         return mutation.model_dump()
 
 
+class MutationRowInput(ToolSchema):
+    """Input schema for a mutation row."""
+
+    vat_code: str
+    amount: float
+    ledger_id: int | None = Field(default=None, ge=1)
+    vat_amount: float | None = None
+    cost_center_id: int | None = Field(default=None, ge=1)
+    description: str | None = None
+    invoice_number: str | None = None
+    relation_id: int | None = Field(default=None, ge=1)
+
+
 class CreateMutationInput(ToolSchema):
     """Input schema for create_mutation tool."""
 
@@ -84,9 +93,13 @@ class CreateMutationInput(ToolSchema):
     )
     date: str = Field(description="Mutation date (YYYY-MM-DD)")
     ledger_id: int = Field(description="Main ledger account ID for the mutation")
-    rows: list[dict] | dict | str | None = Field(
+    rows: list[MutationRowInput] | MutationRowInput | str | None = Field(
         default=None,
         description="Mutation rows as an array of objects. Also accepts a JSON string containing one row object or an array of row objects.",
+    )
+    rows_json: str | None = Field(
+        default=None,
+        description="Fallback JSON string containing mutation rows",
     )
     description: str | None = Field(
         default=None, description="Description (max 50 chars)"
@@ -101,6 +114,11 @@ class CreateMutationInput(ToolSchema):
     in_ex_vat: str | None = Field(
         default=None, description="'IN' for VAT inclusive, 'EX' for VAT exclusive"
     )
+
+    @field_validator("type", mode="before")
+    @classmethod
+    def _coerce_type(cls, value: Any) -> str:
+        return str(value) if isinstance(value, int) else value
 
 
 class CreateMutationTool(BaseTool):
@@ -122,20 +140,24 @@ class CreateMutationTool(BaseTool):
                 },
                 "date": {
                     "type": "string",
+                    "format": "date",
                     "description": "Mutation date (YYYY-MM-DD)",
                 },
                 "ledger_id": {
                     "type": "integer",
+                    "minimum": 1,
                     "description": "Main ledger account ID for the mutation",
                 },
                 "rows": {
                     "type": "array",
+                    "maxItems": 500,
                     "description": "Mutation rows. Use an actual JSON array, not a string.",
                     "items": {
                         "type": "object",
                         "properties": {
                             "ledger_id": {
                                 "type": "integer",
+                                "minimum": 1,
                                 "description": "Ledger account ID for this row",
                             },
                             "vat_code": {
@@ -149,6 +171,7 @@ class CreateMutationTool(BaseTool):
                             },
                             "cost_center_id": {
                                 "type": "integer",
+                                "minimum": 1,
                                 "description": "Cost center ID",
                             },
                             "description": {
@@ -161,6 +184,7 @@ class CreateMutationTool(BaseTool):
                             },
                             "relation_id": {
                                 "type": "integer",
+                                "minimum": 1,
                                 "description": "Relation ID for payment rows",
                             },
                         },
@@ -174,14 +198,17 @@ class CreateMutationTool(BaseTool):
                 },
                 "description": {
                     "type": "string",
+                    "maxLength": 50,
                     "description": "Description (max 50 chars)",
                 },
                 "invoice_number": {
                     "type": "string",
+                    "maxLength": 50,
                     "description": "Invoice number for reference (max 50 chars)",
                 },
                 "relation_id": {
                     "type": "integer",
+                    "minimum": 1,
                     "description": "Relation ID",
                 },
                 "term_of_payment": {
@@ -264,16 +291,12 @@ def _normalize_mutation_rows(rows: Any) -> list[dict[str, Any]] | None:
     return normalized
 
 
-class ListOutstandingInvoicesInput(ToolSchema):
+class ListOutstandingInvoicesInput(PaginatedInput):
     """Input schema for list_outstanding_invoices tool."""
 
     cred_deb: str = Field(
         description="'C' for creditors (bills to pay) or 'D' for debtors (invoices to receive)"
     )
-    limit: int | None = Field(
-        default=None, description="Number of items to retrieve (max 2000)"
-    )
-    offset: int | None = Field(default=None, description="Number of items to skip")
     invoice_number: str | None = Field(
         default=None, description="Filter by invoice number"
     )

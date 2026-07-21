@@ -72,7 +72,9 @@ def _ids_schema(entity: str) -> dict[str, Any]:
             "ids": {
                 "type": "array",
                 "description": f"{entity} ids to fetch. Use an actual JSON array of integers.",
-                "items": {"type": "integer"},
+                "minItems": 1,
+                "maxItems": 2000,
+                "items": {"type": "integer", "minimum": 1},
             },
             "ids_json": {
                 "type": "string",
@@ -80,6 +82,8 @@ def _ids_schema(entity: str) -> dict[str, Any]:
             },
             "max_details": {
                 "type": "integer",
+                "minimum": 1,
+                "maximum": 2000,
                 "description": "Max records to fetch/return (cap guards token cost).",
             },
             "verbose": {
@@ -87,15 +91,25 @@ def _ids_schema(entity: str) -> dict[str, Any]:
                 "description": "Return raw JSON with all null fields instead of compact output.",
             },
         },
-        "required": ["ids"],
         "additionalProperties": False,
     }
 
 
 class _BatchInput(ToolSchema):
-    ids: list[int] = Field(description="Ids to fetch")
+    ids: list[int] | None = Field(
+        default=None,
+        min_length=1,
+        max_length=2000,
+        description="Ids to fetch",
+    )
+    ids_json: str | None = Field(
+        default=None, description="Fallback JSON or comma-separated ids"
+    )
     max_details: int = Field(
-        default=_MAX_DETAILS_DEFAULT, description="Max records to fetch/return"
+        default=_MAX_DETAILS_DEFAULT,
+        ge=1,
+        le=2000,
+        description="Max records to fetch/return",
     )
     verbose: bool = Field(
         default=False, description="Return raw JSON instead of compact output"

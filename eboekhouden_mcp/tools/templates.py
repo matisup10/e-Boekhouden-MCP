@@ -6,19 +6,15 @@ from typing import TYPE_CHECKING, Any
 
 from pydantic import Field
 
-from eboekhouden_mcp.tools.base import BaseTool, ToolSchema
+from eboekhouden_mcp.tools.base import BaseTool, PaginatedInput
 
 if TYPE_CHECKING:
     from eboekhouden import EBoekhoudenClient
 
 
-class ListInvoiceTemplatesInput(ToolSchema):
+class ListInvoiceTemplatesInput(PaginatedInput):
     """Input schema for list_invoice_templates tool."""
 
-    limit: int | None = Field(
-        default=None, description="Number of items to retrieve (max 2000)"
-    )
-    offset: int | None = Field(default=None, description="Number of items to skip")
     name: str | None = Field(default=None, description="Filter by template name")
     type: str | None = Field(
         default=None, description="Filter by type: 'E' for Editor, 'A' for Advanced"
@@ -49,13 +45,8 @@ class ListInvoiceTemplatesTool(BaseTool):
         }
 
 
-class ListEmailTemplatesInput(ToolSchema):
+class ListEmailTemplatesInput(PaginatedInput):
     """Input schema for list_email_templates tool."""
-
-    limit: int | None = Field(
-        default=None, description="Number of items to retrieve (max 2000)"
-    )
-    offset: int | None = Field(default=None, description="Number of items to skip")
 
 
 class ListEmailTemplatesTool(BaseTool):

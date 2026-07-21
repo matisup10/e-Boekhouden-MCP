@@ -7,19 +7,15 @@ from typing import TYPE_CHECKING, Any
 from pydantic import Field
 
 from eboekhouden.models.cost_center import CreateCostCenter
-from eboekhouden_mcp.tools.base import BaseTool, ToolSchema
+from eboekhouden_mcp.tools.base import BaseTool, PaginatedInput, ToolSchema
 
 if TYPE_CHECKING:
     from eboekhouden import EBoekhoudenClient
 
 
-class ListCostCentersInput(ToolSchema):
+class ListCostCentersInput(PaginatedInput):
     """Input schema for list_cost_centers tool."""
 
-    limit: int | None = Field(
-        default=None, description="Number of items to retrieve (max 2000)"
-    )
-    offset: int | None = Field(default=None, description="Number of items to skip")
     parent_id: str | None = Field(
         default=None, description="Filter by parent cost center ID"
     )

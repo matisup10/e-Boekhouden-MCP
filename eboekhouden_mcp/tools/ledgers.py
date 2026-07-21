@@ -7,19 +7,15 @@ from typing import TYPE_CHECKING, Any
 from pydantic import Field
 
 from eboekhouden.models.ledger import CreateLedger, PatchLedger
-from eboekhouden_mcp.tools.base import BaseTool, ToolSchema
+from eboekhouden_mcp.tools.base import BaseTool, PaginatedInput, ToolSchema
 
 if TYPE_CHECKING:
     from eboekhouden import EBoekhoudenClient
 
 
-class ListLedgersInput(ToolSchema):
+class ListLedgersInput(PaginatedInput):
     """Input schema for list_ledgers tool."""
 
-    limit: int | None = Field(
-        default=None, description="Number of items to retrieve (max 2000)"
-    )
-    offset: int | None = Field(default=None, description="Number of items to skip")
     code: str | None = Field(default=None, description="Filter by ledger code")
     category: str | None = Field(
         default=None, description="Filter by category (BAL, VW, etc.)"

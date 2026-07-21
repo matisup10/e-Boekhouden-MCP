@@ -2,24 +2,20 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import Field
 
 from eboekhouden.models.invoice import CreateInvoice, CreateInvoiceItem
-from eboekhouden_mcp.tools.base import BaseTool, ToolSchema
+from eboekhouden_mcp.tools.base import BaseTool, PaginatedInput, ToolSchema
 
 if TYPE_CHECKING:
     from eboekhouden import EBoekhoudenClient
 
 
-class ListInvoicesInput(ToolSchema):
+class ListInvoicesInput(PaginatedInput):
     """Input schema for list_invoices tool."""
 
-    limit: int | None = Field(
-        default=None, description="Number of items to retrieve (max 2000)"
-    )
-    offset: int | None = Field(default=None, description="Number of items to skip")
     invoice_number: str | None = Field(
         default=None, description="Filter by invoice number"
     )
@@ -77,23 +73,27 @@ class GetInvoiceTool(BaseTool):
 class InvoiceItemInput(ToolSchema):
     """Input schema for an invoice line item."""
 
-    description: str = Field(description="Line item description")
+    description: str = Field(min_length=1, description="Line item description")
     vat_code: str = Field(
         description="VAT code (e.g., 'HOOG_VERK_21' for 21% Dutch VAT)"
     )
-    ledger_id: int = Field(description="Ledger account ID")
+    ledger_id: int = Field(ge=1, description="Ledger account ID")
     quantity: float | None = Field(default=None, description="Quantity")
     price_per_unit: float | None = Field(default=None, description="Price per unit")
-    cost_center_id: int | None = Field(default=None, description="Cost center ID")
+    cost_center_id: int | None = Field(default=None, ge=1, description="Cost center ID")
 
 
 class CreateInvoiceInput(ToolSchema):
     """Input schema for create_invoice tool."""
 
-    relation_id: int = Field(description="Relation (customer) ID")
-    term_of_payment: int = Field(description="Payment term in days")
-    template_id: int = Field(description="Invoice template ID")
-    items: list[dict] = Field(description="List of invoice line items")
+    relation_id: int = Field(ge=1, description="Relation (customer) ID")
+    term_of_payment: int = Field(ge=0, description="Payment term in days")
+    template_id: int = Field(ge=1, description="Invoice template ID")
+    items: list[InvoiceItemInput] = Field(
+        min_length=1,
+        max_length=500,
+        description="Invoice line items (1-500)",
+    )
     invoice_number: str | None = Field(
         default=None,
         description="Custom invoice number (auto-generated if not provided)",
@@ -101,14 +101,16 @@ class CreateInvoiceInput(ToolSchema):
     date: str | None = Field(
         default=None, description="Invoice date (YYYY-MM-DD, defaults to today)"
     )
-    in_ex_vat: str | None = Field(
+    in_ex_vat: Literal["IN", "EX"] | None = Field(
         default=None, description="'IN' for VAT inclusive, 'EX' for VAT exclusive"
     )
     reference: str | None = Field(
-        default=None, description="Reference text (max 50 chars)"
+        default=None, max_length=50, description="Reference text (max 50 chars)"
     )
     text: str | None = Field(
-        default=None, description="Invoice text/notes (max 35000 chars)"
+        default=None,
+        max_length=35000,
+        description="Invoice text/notes (max 35000 chars)",
     )
 
 

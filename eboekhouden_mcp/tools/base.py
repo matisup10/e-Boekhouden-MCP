@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 if TYPE_CHECKING:
     from eboekhouden import EBoekhoudenClient
@@ -14,7 +14,23 @@ if TYPE_CHECKING:
 class ToolSchema(BaseModel):
     """Schema for tool input parameters."""
 
-    pass
+    model_config = ConfigDict(extra="forbid")
+
+
+class PaginatedInput(ToolSchema):
+    """Shared API pagination constraints."""
+
+    limit: int | None = Field(
+        default=None,
+        ge=1,
+        le=2000,
+        description="Number of items to retrieve (1-2000)",
+    )
+    offset: int | None = Field(
+        default=None,
+        ge=0,
+        description="Number of items to skip (0 or greater)",
+    )
 
 
 class BaseTool(ABC):
